@@ -1,0 +1,131 @@
+syntax = "proto3";
+package pluginv2;
+
+option go_package = "./;pluginv2";
+
+//-----------------------------------------------
+// Common
+//-----------------------------------------------
+
+message AppInstanceSettings {
+  bytes jsonData = 3;
+  map<string,string> decryptedSecureJsonData = 4;
+  int64 lastUpdatedMS = 5;
+}
+
+message DataSourceInstanceSettings {
+  int64 id = 1;
+  string name = 2;
+  string url = 3;
+  string user = 4;
+  string database = 5;
+  bool basicAuthEnabled = 6;
+  string basicAuthUser = 7;
+  bytes jsonData = 8;
+  map<string,string> decryptedSecureJsonData = 9;
+  int64 lastUpdatedMS = 10;
+  string uid = 11;
+}
+
+message User {
+  string login = 1;
+  string name = 2;
+  string email = 3;
+  string role = 4;
+}
+
+message PluginContext {
+  // The Grafana organization id the request originating from.
+  int64 orgId = 1;
+
+  // The unique identifier of the plugin the request  originating from.
+  string pluginId = 2;
+
+  // The Grafana user the request originating from.
+  //
+  // Will not be provided if Grafana backend initiated the request.
+  User user = 3;
+
+  // App plugin instance settings is the configured app instance settings.
+  // In Grafana an app instance is an enabled app plugin in a
+  // Grafana organization.
+  //
+  // Will only be set if request targeting an app instance.
+  AppInstanceSettings appInstanceSettings = 4;
+
+  // Data source instance settings is the configured data source instance
+  // settings. In Grafana a data source instance is a created data source
+  // in a Grafana organization.
+  //
+  // Will only be set if request targeting a data source instance.
+  DataSourceInstanceSettings dataSourceInstanceSettings = 5;
+}
+
+//---------------------------------------------------------
+// Resource service enables HTTP-style requests over gRPC.
+//---------------------------------------------------------
+
+service Resource {
+  rpc CallResource(CallResourceRequest) returns (stream CallResourceResponse);
+}
+
+message StringList {
+  repeated string values = 1;
+}
+
+message CallResourceRequest {
+  PluginContext pluginContext = 1;
+  string path = 2;
+  string method = 3;
+  string url = 4;
+  map<string,StringList> headers = 5;
+  bytes body = 6;
+}
+
+message CallResourceResponse {
+  // Maps to raw HTTP status codes when passed over HTTP
+  int32 code = 1;
+
+  // Raw HTTP headers sent to the client
+  map<string,StringList> headers = 2;
+
+  // Raw HTTP body bytes sent to the client
+  bytes body = 3;
+}
+
+
+//插件信息
+service PluginInfo {
+  rpc Get(PluginInfoGetReq) returns (PluginInfoGetRes);
+  rpc CheckHealth(CheckHealthRequest) returns (CheckHealthResponse);
+}
+
+
+message CheckHealthRequest {
+  PluginContext pluginContext = 1;
+
+  // Environment info
+  map<string,string> headers = 2;
+}
+
+message CheckHealthResponse {
+  enum HealthStatus {
+    UNKNOWN = 0;
+    OK = 1;
+    ERROR = 2;
+  }
+
+  HealthStatus status = 1;
+  string message = 2;
+  bytes jsonDetails = 3;
+}
+
+
+message PluginInfoGetReq {
+  PluginContext pluginContext = 1;
+}
+
+message PluginInfoGetRes {
+  string pluginID = 1;
+  string pluginVersion = 2;
+}
