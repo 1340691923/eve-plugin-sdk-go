@@ -1,17 +1,23 @@
 package proto
 
 import (
-	"encoding/json"
+	"bytes"
+	"github.com/goccy/go-json"
 	"github.com/pkg/errors"
 	"github.com/tidwall/gjson"
 	"io"
 	"net/http"
+	"sync"
 )
 
 type Response struct {
 	statusCode int
-	header     http.Header
+	header     map[string][]string
 	resByte    []byte
+}
+
+func NewResponseWithProto(statusCode int, header map[string][]string, resByte []byte) *Response {
+	return &Response{statusCode: statusCode, header: header, resByte: resByte}
 }
 
 func (r *Response) StatusCode() int {
@@ -19,6 +25,7 @@ func (r *Response) StatusCode() int {
 }
 
 func (r *Response) Header() http.Header {
+
 	return r.header
 }
 
@@ -72,19 +79,47 @@ func (u *Response) UnmarshalJSON(b []byte) error {
 	return nil
 }
 
+var bufferPool = sync.Pool{
+	New: func() interface{} {
+		return new(bytes.Buffer)
+	},
+}
+
 func NewResponse(statusCode int, header http.Header, readCloser io.ReadCloser) (res *Response, err error) {
 	res = new(Response)
 	defer readCloser.Close()
-	var resByte []byte
-	resByte, err = io.ReadAll(readCloser)
+
+	// 从 pool 中获取一个 buffer
+	buffer := bufferPool.Get().(*bytes.Buffer)
+	defer bufferPool.Put(buffer)
+	buffer.Reset()
+
+	// 使用 io.Copy 将 HTTP body 读取到 buffer 中
+	_, err = io.Copy(buffer, readCloser)
 	if err != nil {
 		err = errors.WithStack(err)
 		return
 	}
 
-	res.resByte = resByte
+	// 获取 []byte 数据
+	bodyBytes := buffer.Bytes()
+
+	if err != nil {
+		err = errors.WithStack(err)
+		return
+	}
+
+	res.resByte = bodyBytes
 	res.header = header
 	res.statusCode = statusCode
+	return
+}
+
+func NewResponseNotErr() (res *Response) {
+	res = new(Response)
+	res.resByte = []byte(`{}`)
+	res.header = http.Header{}
+	res.statusCode = 200
 	return
 }
 

@@ -1,8 +1,8 @@
 package resource
 
 import (
-	"encoding/json"
 	"github.com/1340691923/eve-plugin-sdk-go/backend"
+	"github.com/goccy/go-json"
 	"net/http"
 )
 
@@ -39,8 +39,8 @@ func sendResourceResponse(
 	body []byte,
 ) error {
 	return sender.Send(&backend.CallResourceResponse{
-		Status:	status,
-		Headers:	headers,
-		Body:	body,
+		Status:  status,
+		Headers: headers,
+		Body:    body,
 	})
 }

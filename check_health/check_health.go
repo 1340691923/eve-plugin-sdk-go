@@ -2,9 +2,9 @@ package check_health
 
 import (
 	"context"
-	"encoding/json"
 	"github.com/1340691923/eve-plugin-sdk-go/backend"
 	"github.com/1340691923/eve-plugin-sdk-go/build"
+	"github.com/goccy/go-json"
 )
 
 type CheckHealthSvr struct {

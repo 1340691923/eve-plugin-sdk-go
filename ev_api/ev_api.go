@@ -1,26 +1,33 @@
 package ev_api
 
 import (
+	"bytes"
 	"context"
 	"crypto/hmac"
 	"crypto/sha256"
 	"encoding/base64"
-	"encoding/json"
+	"errors"
 	"fmt"
+	"github.com/1340691923/eve-plugin-sdk-go/backend/logger"
 	"github.com/1340691923/eve-plugin-sdk-go/ev_api/dto"
 	"github.com/1340691923/eve-plugin-sdk-go/ev_api/proto"
 	"github.com/1340691923/eve-plugin-sdk-go/ev_api/vo"
-	"github.com/imroc/req/v2"
+	"github.com/1340691923/eve-plugin-sdk-go/genproto/pluginv2"
+	"github.com/goccy/go-json"
 	"github.com/spf13/cast"
+	"github.com/valyala/fasthttp"
+	protobuf "google.golang.org/protobuf/proto"
+	"log"
 	"sync"
+	"time"
 )
 
 type evApi struct {
 	rpcKey   string
 	rpcPort  string
 	debug    bool
-	client   *req.Client
 	pluginId string
+	client   *fasthttp.Client
 }
 
 var (
@@ -33,15 +40,11 @@ func init() {
 }
 
 func SetEvApi(rpcKey, rpcPort, pluginId string, debug bool) *evApi {
-
+	client := &fasthttp.Client{
+		ReadTimeout:  120 * time.Second,
+		WriteTimeout: 120 * time.Second,
+	}
 	once.Do(func() {
-		var client *req.Client
-
-		if debug {
-			client = req.C().DevMode()
-		} else {
-			client = req.C()
-		}
 		evApiObj = &evApi{
 			rpcKey:   rpcKey,
 			rpcPort:  rpcPort,
@@ -49,13 +52,8 @@ func SetEvApi(rpcKey, rpcPort, pluginId string, debug bool) *evApi {
 			debug:    debug,
 			client:   client,
 		}
-
 	})
 
-	return evApiObj
-}
-
-func getEvApi() *evApi {
 	return evApiObj
 }
 
@@ -72,44 +70,36 @@ func (this *evApi) EsVersion(ctx context.Context, req dto.EsConnectData) (versio
 	return cast.ToInt(res.Data), nil
 }
 
-func (this *evApi) CatNodes(ctx context.Context, req dto.CatNodesReq) (res *proto.Response, err error) {
-	res = new(proto.Response)
-	commonRes := vo.ApiCommonRes{}
-	commonRes.Data = res
-	err = this.request(ctx, "api/plugin_util/CatNodes", req, &commonRes)
+func (this *evApi) EsCatNodes(ctx context.Context, req dto.CatNodesReq) (res *proto.Response, err error) {
+
+	res, err = this.requestProtobuf(ctx, "api/plugin_util/EsCatNodes", req)
 	if err != nil {
 		return
 	}
 	return
 }
 
-func (this *evApi) ClusterStats(ctx context.Context, req dto.ClusterStatsReq) (res *proto.Response, err error) {
-	res = new(proto.Response)
-	commonRes := vo.ApiCommonRes{}
-	commonRes.Data = res
-	err = this.request(ctx, "api/plugin_util/ClusterStats", req, &commonRes)
+func (this *evApi) EsClusterStats(ctx context.Context, req dto.ClusterStatsReq) (res *proto.Response, err error) {
+
+	res, err = this.requestProtobuf(ctx, "api/plugin_util/EsClusterStats", req)
 	if err != nil {
 		return
 	}
 	return
 }
 
-func (this *evApi) PerformRequest(ctx context.Context, req dto.PerformRequest) (res *proto.Response, err error) {
-	res = new(proto.Response)
-	commonRes := vo.ApiCommonRes{}
-	commonRes.Data = res
-	err = this.request(ctx, "api/plugin_util/PerformRequest", req, &commonRes)
+func (this *evApi) EsPerformRequest(ctx context.Context, req dto.PerformRequest) (res *proto.Response, err error) {
+
+	res, err = this.requestProtobuf(ctx, "api/plugin_util/EsPerformRequest", req)
 	if err != nil {
 		return
 	}
 	return
 }
 
-func (this *evApi) IndicesSegmentsRequest(ctx context.Context, req dto.IndicesSegmentsRequest) (res *proto.Response, err error) {
-	res = new(proto.Response)
-	commonRes := vo.ApiCommonRes{}
-	commonRes.Data = res
-	err = this.request(ctx, "api/plugin_util/IndicesSegmentsRequest", req, &commonRes)
+func (this *evApi) EsIndicesSegmentsRequest(ctx context.Context, req dto.IndicesSegmentsRequest) (res *proto.Response, err error) {
+
+	res, err = this.requestProtobuf(ctx, "api/plugin_util/EsIndicesSegmentsRequest", req)
 	if err != nil {
 		return
 	}
@@ -117,417 +107,336 @@ func (this *evApi) IndicesSegmentsRequest(ctx context.Context, req dto.IndicesSe
 }
 
 func (this *evApi) Ping(ctx context.Context, req dto.PingReq) (res *proto.Response, err error) {
-	res = new(proto.Response)
-	commonRes := vo.ApiCommonRes{}
-	commonRes.Data = res
-	err = this.request(ctx, "api/plugin_util/Ping", req, &commonRes)
+
+	res, err = this.requestProtobuf(ctx, "api/plugin_util/Ping", req)
 	if err != nil {
 		return
 	}
 	return
 }
 
-func (this *evApi) Refresh(ctx context.Context, req dto.RefreshReq) (res *proto.Response, err error) {
-	res = new(proto.Response)
-	commonRes := vo.ApiCommonRes{}
-	commonRes.Data = res
-	err = this.request(ctx, "api/plugin_util/Refresh", req, &commonRes)
+func (this *evApi) EsRefresh(ctx context.Context, req dto.RefreshReq) (res *proto.Response, err error) {
+
+	res, err = this.requestProtobuf(ctx, "api/plugin_util/EsRefresh", req)
 	if err != nil {
 		return
 	}
 	return
 }
 
-func (this *evApi) Open(ctx context.Context, req dto.OpenReq) (res *proto.Response, err error) {
-	res = new(proto.Response)
-	commonRes := vo.ApiCommonRes{}
-	commonRes.Data = res
-	err = this.request(ctx, "api/plugin_util/Open", req, &commonRes)
+func (this *evApi) EsOpen(ctx context.Context, req dto.OpenReq) (res *proto.Response, err error) {
+
+	res, err = this.requestProtobuf(ctx, "api/plugin_util/EsOpen", req)
 	if err != nil {
 		return
 	}
 	return
 }
 
-func (this *evApi) Flush(ctx context.Context, req dto.FlushReq) (res *proto.Response, err error) {
-	res = new(proto.Response)
-	commonRes := vo.ApiCommonRes{}
-	commonRes.Data = res
-	err = this.request(ctx, "api/plugin_util/Flush", req, &commonRes)
+func (this *evApi) EsFlush(ctx context.Context, req dto.FlushReq) (res *proto.Response, err error) {
+
+	res, err = this.requestProtobuf(ctx, "api/plugin_util/EsFlush", req)
 	if err != nil {
 		return
 	}
 	return
 }
 
-func (this *evApi) IndicesClearCache(ctx context.Context, req dto.IndicesClearCacheReq) (res *proto.Response, err error) {
-	res = new(proto.Response)
-	commonRes := vo.ApiCommonRes{}
-	commonRes.Data = res
-	err = this.request(ctx, "api/plugin_util/IndicesClearCache", req, &commonRes)
+func (this *evApi) EsIndicesClearCache(ctx context.Context, req dto.IndicesClearCacheReq) (res *proto.Response, err error) {
+
+	res, err = this.requestProtobuf(ctx, "api/plugin_util/EsIndicesClearCache", req)
 	if err != nil {
 		return
 	}
 	return
 }
 
-func (this *evApi) IndicesClose(ctx context.Context, req dto.IndicesCloseReq) (res *proto.Response, err error) {
-	res = new(proto.Response)
-	commonRes := vo.ApiCommonRes{}
-	commonRes.Data = res
-	err = this.request(ctx, "api/plugin_util/IndicesClose", req, &commonRes)
+func (this *evApi) EsIndicesClose(ctx context.Context, req dto.IndicesCloseReq) (res *proto.Response, err error) {
+
+	res, err = this.requestProtobuf(ctx, "api/plugin_util/EsIndicesClose", req)
 	if err != nil {
 		return
 	}
 	return
 }
 
-func (this *evApi) IndicesForcemerge(ctx context.Context, req dto.IndicesForcemergeReq) (res *proto.Response, err error) {
-	res = new(proto.Response)
-	commonRes := vo.ApiCommonRes{}
-	commonRes.Data = res
-	err = this.request(ctx, "api/plugin_util/IndicesForcemerge", req, &commonRes)
+func (this *evApi) EsIndicesForcemerge(ctx context.Context, req dto.IndicesForcemergeReq) (res *proto.Response, err error) {
+
+	res, err = this.requestProtobuf(ctx, "api/plugin_util/EsIndicesForcemerge", req)
 	if err != nil {
 		return
 	}
 	return
 }
 
-func (this *evApi) DeleteByQuery(ctx context.Context, req dto.DeleteByQueryReq) (res *proto.Response, err error) {
-	res = new(proto.Response)
-	commonRes := vo.ApiCommonRes{}
-	commonRes.Data = res
-	err = this.request(ctx, "api/plugin_util/DeleteByQuery", req, &commonRes)
+func (this *evApi) EsDeleteByQuery(ctx context.Context, req dto.DeleteByQueryReq) (res *proto.Response, err error) {
+
+	res, err = this.requestProtobuf(ctx, "api/plugin_util/EsDeleteByQuery", req)
 	if err != nil {
 		return
 	}
 	return
 }
 
-func (this *evApi) SnapshotCreate(ctx context.Context, req dto.SnapshotCreateReq) (res *proto.Response, err error) {
-	res = new(proto.Response)
-	commonRes := vo.ApiCommonRes{}
-	commonRes.Data = res
-	err = this.request(ctx, "api/plugin_util/SnapshotCreate", req, &commonRes)
+func (this *evApi) EsSnapshotCreate(ctx context.Context, req dto.SnapshotCreateReq) (res *proto.Response, err error) {
+
+	res, err = this.requestProtobuf(ctx, "api/plugin_util/EsSnapshotCreate", req)
 	if err != nil {
 		return
 	}
 	return
 }
 
-func (this *evApi) SnapshotDelete(ctx context.Context, req dto.SnapshotDeleteReq) (res *proto.Response, err error) {
-	res = new(proto.Response)
-	commonRes := vo.ApiCommonRes{}
-	commonRes.Data = res
-	err = this.request(ctx, "api/plugin_util/SnapshotDelete", req, &commonRes)
+func (this *evApi) EsSnapshotDelete(ctx context.Context, req dto.SnapshotDeleteReq) (res *proto.Response, err error) {
+
+	res, err = this.requestProtobuf(ctx, "api/plugin_util/EsSnapshotDelete", req)
 	if err != nil {
 		return
 	}
 	return
 }
 
-func (this *evApi) RestoreSnapshot(ctx context.Context, req dto.RestoreSnapshotReq) (res *proto.Response, err error) {
-	res = new(proto.Response)
-	commonRes := vo.ApiCommonRes{}
-	commonRes.Data = res
-	err = this.request(ctx, "api/plugin_util/RestoreSnapshot", req, &commonRes)
+func (this *evApi) EsRestoreSnapshot(ctx context.Context, req dto.RestoreSnapshotReq) (res *proto.Response, err error) {
+
+	res, err = this.requestProtobuf(ctx, "api/plugin_util/EsRestoreSnapshot", req)
 	if err != nil {
 		return
 	}
 	return
 }
 
-func (this *evApi) SnapshotStatus(ctx context.Context, req dto.SnapshotStatusReq) (res *proto.Response, err error) {
-	res = new(proto.Response)
-	commonRes := vo.ApiCommonRes{}
-	commonRes.Data = res
-	err = this.request(ctx, "api/plugin_util/SnapshotStatus", req, &commonRes)
+func (this *evApi) EsSnapshotStatus(ctx context.Context, req dto.SnapshotStatusReq) (res *proto.Response, err error) {
+
+	res, err = this.requestProtobuf(ctx, "api/plugin_util/EsSnapshotStatus", req)
 	if err != nil {
 		return
 	}
 	return
 }
 
-func (this *evApi) SnapshotGetRepository(ctx context.Context, req dto.SnapshotGetRepositoryReq) (res *proto.Response, err error) {
-	res = new(proto.Response)
-	commonRes := vo.ApiCommonRes{}
-	commonRes.Data = res
-	err = this.request(ctx, "api/plugin_util/SnapshotGetRepository", req, &commonRes)
+func (this *evApi) EsSnapshotGetRepository(ctx context.Context, req dto.SnapshotGetRepositoryReq) (res *proto.Response, err error) {
+
+	res, err = this.requestProtobuf(ctx, "api/plugin_util/EsSnapshotGetRepository", req)
 	if err != nil {
 		return
 	}
 	return
 }
 
-func (this *evApi) SnapshotCreateRepository(ctx context.Context, req dto.SnapshotCreateRepositoryReq) (res *proto.Response, err error) {
-	res = new(proto.Response)
-	commonRes := vo.ApiCommonRes{}
-	commonRes.Data = res
-	err = this.request(ctx, "api/plugin_util/SnapshotCreateRepository", req, &commonRes)
+func (this *evApi) EsSnapshotCreateRepository(ctx context.Context, req dto.SnapshotCreateRepositoryReq) (res *proto.Response, err error) {
+	res, err = this.requestProtobuf(ctx, "api/plugin_util/EsSnapshotCreateRepository", req)
 	if err != nil {
 		return
 	}
 	return
 }
 
-func (this *evApi) SnapshotDeleteRepository(ctx context.Context, req dto.SnapshotDeleteRepositoryReq) (res *proto.Response, err error) {
-	res = new(proto.Response)
-	commonRes := vo.ApiCommonRes{}
-	commonRes.Data = res
-	err = this.request(ctx, "api/plugin_util/SnapshotDeleteRepository", req, &commonRes)
+func (this *evApi) EsSnapshotDeleteRepository(ctx context.Context, req dto.SnapshotDeleteRepositoryReq) (res *proto.Response, err error) {
+
+	res, err = this.requestProtobuf(ctx, "api/plugin_util/EsSnapshotDeleteRepository", req)
 	if err != nil {
 		return
 	}
 	return
 }
 
-func (this *evApi) GetIndices(ctx context.Context, req dto.GetIndicesReq) (res *proto.Response, err error) {
-	res = new(proto.Response)
-	commonRes := vo.ApiCommonRes{}
-	commonRes.Data = res
-	err = this.request(ctx, "api/plugin_util/GetIndices", req, &commonRes)
+func (this *evApi) EsGetIndices(ctx context.Context, req dto.GetIndicesReq) (res *proto.Response, err error) {
+
+	res, err = this.requestProtobuf(ctx, "api/plugin_util/EsGetIndices", req)
 	if err != nil {
 		return
 	}
 	return
 }
 
-func (this *evApi) CatHealth(ctx context.Context, req dto.CatHealthReq) (res *proto.Response, err error) {
-	res = new(proto.Response)
-	commonRes := vo.ApiCommonRes{}
-	commonRes.Data = res
-	err = this.request(ctx, "api/plugin_util/CatHealth", req, &commonRes)
+func (this *evApi) EsCatHealth(ctx context.Context, req dto.CatHealthReq) (res *proto.Response, err error) {
+
+	res, err = this.requestProtobuf(ctx, "api/plugin_util/EsCatHealth", req)
 	if err != nil {
 		return
 	}
 	return
 }
 
-func (this *evApi) CatShards(ctx context.Context, req dto.CatShardsReq) (res *proto.Response, err error) {
-	res = new(proto.Response)
-	commonRes := vo.ApiCommonRes{}
-	commonRes.Data = res
-	err = this.request(ctx, "api/plugin_util/CatShards", req, &commonRes)
+func (this *evApi) EsCatShards(ctx context.Context, req dto.CatShardsReq) (res *proto.Response, err error) {
+
+	res, err = this.requestProtobuf(ctx, "api/plugin_util/EsCatShards", req)
 	if err != nil {
 		return
 	}
 	return
 }
 
-func (this *evApi) CatCount(ctx context.Context, req dto.CatCountReq) (res *proto.Response, err error) {
-	res = new(proto.Response)
-	commonRes := vo.ApiCommonRes{}
-	commonRes.Data = res
-	err = this.request(ctx, "api/plugin_util/CatCount", req, &commonRes)
+func (this *evApi) EsCatCount(ctx context.Context, req dto.CatCountReq) (res *proto.Response, err error) {
+
+	res, err = this.requestProtobuf(ctx, "api/plugin_util/EsCatCount", req)
 	if err != nil {
 		return
 	}
 	return
 }
 
-func (this *evApi) CatAllocationRequest(ctx context.Context, req dto.CatAllocationRequest) (res *proto.Response, err error) {
-	res = new(proto.Response)
-	commonRes := vo.ApiCommonRes{}
-	commonRes.Data = res
-	err = this.request(ctx, "api/plugin_util/CatAllocationRequest", req, &commonRes)
+func (this *evApi) EsCatAllocationRequest(ctx context.Context, req dto.CatAllocationRequest) (res *proto.Response, err error) {
+
+	res, err = this.requestProtobuf(ctx, "api/plugin_util/EsCatAllocationRequest", req)
 	if err != nil {
 		return
 	}
 	return
 }
 
-func (this *evApi) CatAliases(ctx context.Context, req dto.CatAliasesReq) (res *proto.Response, err error) {
-	res = new(proto.Response)
-	commonRes := vo.ApiCommonRes{}
-	commonRes.Data = res
-	err = this.request(ctx, "api/plugin_util/CatAliases", req, &commonRes)
+func (this *evApi) EsCatAliases(ctx context.Context, req dto.CatAliasesReq) (res *proto.Response, err error) {
+
+	res, err = this.requestProtobuf(ctx, "api/plugin_util/EsCatAliases", req)
 	if err != nil {
 		return
 	}
 	return
 }
 
-func (this *evApi) Delete(ctx context.Context, req dto.DeleteReq) (res *proto.Response, err error) {
-	res = new(proto.Response)
-	commonRes := vo.ApiCommonRes{}
-	commonRes.Data = res
-	err = this.request(ctx, "api/plugin_util/Delete", req, &commonRes)
+func (this *evApi) EsDelete(ctx context.Context, req dto.DeleteReq) (res *proto.Response, err error) {
+
+	res, err = this.requestProtobuf(ctx, "api/plugin_util/EsDelete", req)
 	if err != nil {
 		return
 	}
 	return
 }
 
-func (this *evApi) Update(ctx context.Context, req dto.UpdateReq) (res *proto.Response, err error) {
-	res = new(proto.Response)
-	commonRes := vo.ApiCommonRes{}
-	commonRes.Data = res
-	err = this.request(ctx, "api/plugin_util/Update", req, &commonRes)
+func (this *evApi) EsUpdate(ctx context.Context, req dto.UpdateReq) (res *proto.Response, err error) {
+
+	res, err = this.requestProtobuf(ctx, "api/plugin_util/EsUpdate", req)
 	if err != nil {
 		return
 	}
 	return
 }
 
-func (this *evApi) Create(ctx context.Context, req dto.CreateReq) (res *proto.Response, err error) {
-	res = new(proto.Response)
-	commonRes := vo.ApiCommonRes{}
-	commonRes.Data = res
-	err = this.request(ctx, "api/plugin_util/Create", req, &commonRes)
+func (this *evApi) EsCreate(ctx context.Context, req dto.CreateReq) (res *proto.Response, err error) {
+
+	res, err = this.requestProtobuf(ctx, "api/plugin_util/EsCreate", req)
 	if err != nil {
 		return
 	}
 	return
 }
 
-func (this *evApi) Search(ctx context.Context, req dto.SearchReq) (res *proto.Response, err error) {
-	res = new(proto.Response)
-	commonRes := vo.ApiCommonRes{}
-	commonRes.Data = res
-	err = this.request(ctx, "api/plugin_util/Search", req, &commonRes)
+func (this *evApi) EsSearch(ctx context.Context, req dto.SearchReq) (res *proto.Response, err error) {
+
+	return this.requestProtobuf(ctx, "api/plugin_util/EsSearch", req)
+}
+
+func (this *evApi) EsIndicesPutSettingsRequest(ctx context.Context, req dto.IndicesPutSettingsRequest) (res *proto.Response, err error) {
+
+	res, err = this.requestProtobuf(ctx, "api/plugin_util/EsIndicesPutSettingsRequest", req)
 	if err != nil {
 		return
 	}
 	return
 }
 
-func (this *evApi) IndicesPutSettingsRequest(ctx context.Context, req dto.IndicesPutSettingsRequest) (res *proto.Response, err error) {
-	res = new(proto.Response)
-	commonRes := vo.ApiCommonRes{}
-	commonRes.Data = res
-	err = this.request(ctx, "api/plugin_util/IndicesPutSettingsRequest", req, &commonRes)
+func (this *evApi) EsCreateIndex(ctx context.Context, req dto.CreateIndexReq) (res *proto.Response, err error) {
+
+	res, err = this.requestProtobuf(ctx, "api/plugin_util/EsCreateIndex", req)
 	if err != nil {
 		return
 	}
 	return
 }
 
-func (this *evApi) CreateIndex(ctx context.Context, req dto.CreateIndexReq) (res *proto.Response, err error) {
-	res = new(proto.Response)
-	commonRes := vo.ApiCommonRes{}
-	commonRes.Data = res
-	err = this.request(ctx, "api/plugin_util/CreateIndex", req, &commonRes)
+func (this *evApi) EsDeleteIndex(ctx context.Context, req dto.DeleteIndexReq) (res *proto.Response, err error) {
+
+	res, err = this.requestProtobuf(ctx, "api/plugin_util/EsDeleteIndex", req)
 	if err != nil {
 		return
 	}
 	return
 }
 
-func (this *evApi) DeleteIndex(ctx context.Context, req dto.DeleteIndexReq) (res *proto.Response, err error) {
-	res = new(proto.Response)
-	commonRes := vo.ApiCommonRes{}
-	commonRes.Data = res
-	err = this.request(ctx, "api/plugin_util/DeleteIndex", req, &commonRes)
+func (this *evApi) EsReindex(ctx context.Context, req dto.ReindexReq) (res *proto.Response, err error) {
+
+	res, err = this.requestProtobuf(ctx, "api/plugin_util/EsReindex", req)
 	if err != nil {
 		return
 	}
 	return
 }
 
-func (this *evApi) Reindex(ctx context.Context, req dto.ReindexReq) (res *proto.Response, err error) {
-	res = new(proto.Response)
-	commonRes := vo.ApiCommonRes{}
-	commonRes.Data = res
-	err = this.request(ctx, "api/plugin_util/Reindex", req, &commonRes)
+func (this *evApi) EsIndicesGetSettingsRequest(ctx context.Context, req dto.IndicesGetSettingsRequestReq) (res *proto.Response, err error) {
+
+	res, err = this.requestProtobuf(ctx, "api/plugin_util/EsIndicesGetSettingsRequest", req)
 	if err != nil {
 		return
 	}
 	return
 }
 
-func (this *evApi) IndicesGetSettingsRequest(ctx context.Context, req dto.IndicesGetSettingsRequestReq) (res *proto.Response, err error) {
-	res = new(proto.Response)
-	commonRes := vo.ApiCommonRes{}
-	commonRes.Data = res
-	err = this.request(ctx, "api/plugin_util/IndicesGetSettingsRequest", req, &commonRes)
+func (this *evApi) EsPutMapping(ctx context.Context, req dto.PutMappingReq) (res *proto.Response, err error) {
+
+	res, err = this.requestProtobuf(ctx, "api/plugin_util/EsPutMapping", req)
 	if err != nil {
 		return
 	}
 	return
 }
 
-func (this *evApi) PutMapping(ctx context.Context, req dto.PutMappingReq) (res *proto.Response, err error) {
-	res = new(proto.Response)
-	commonRes := vo.ApiCommonRes{}
-	commonRes.Data = res
-	err = this.request(ctx, "api/plugin_util/PutMapping", req, &commonRes)
+func (this *evApi) EsGetMapping(ctx context.Context, req dto.GetMappingReq) (res *proto.Response, err error) {
+
+	res, err = this.requestProtobuf(ctx, "api/plugin_util/EsGetMapping", req)
 	if err != nil {
 		return
 	}
 	return
 }
 
-func (this *evApi) GetMapping(ctx context.Context, req dto.GetMappingReq) (res *proto.Response, err error) {
-	res = new(proto.Response)
-	commonRes := vo.ApiCommonRes{}
-	commonRes.Data = res
-	err = this.request(ctx, "api/plugin_util/GetMapping", req, &commonRes)
+func (this *evApi) EsGetAliases(ctx context.Context, req dto.GetAliasesReq) (res *proto.Response, err error) {
+
+	res, err = this.requestProtobuf(ctx, "api/plugin_util/EsGetAliases", req)
 	if err != nil {
 		return
 	}
 	return
 }
 
-func (this *evApi) GetAliases(ctx context.Context, req dto.GetAliasesReq) (res *proto.Response, err error) {
-	res = new(proto.Response)
-	commonRes := vo.ApiCommonRes{}
-	commonRes.Data = res
-	err = this.request(ctx, "api/plugin_util/GetAliases", req, &commonRes)
+func (this *evApi) EsAddAliases(ctx context.Context, req dto.AddAliasesReq) (res *proto.Response, err error) {
+
+	res, err = this.requestProtobuf(ctx, "api/plugin_util/EsAddAliases", req)
 	if err != nil {
 		return
 	}
 	return
 }
 
-func (this *evApi) AddAliases(ctx context.Context, req dto.AddAliasesReq) (res *proto.Response, err error) {
-	res = new(proto.Response)
-	commonRes := vo.ApiCommonRes{}
-	commonRes.Data = res
-	err = this.request(ctx, "api/plugin_util/AddAliases", req, &commonRes)
+func (this *evApi) EsRemoveAliases(ctx context.Context, req dto.RemoveAliasesReq) (res *proto.Response, err error) {
+
+	res, err = this.requestProtobuf(ctx, "api/plugin_util/EsRemoveAliases", req)
 	if err != nil {
 		return
 	}
 	return
 }
 
-func (this *evApi) RemoveAliases(ctx context.Context, req dto.RemoveAliasesReq) (res *proto.Response, err error) {
-	res = new(proto.Response)
-	commonRes := vo.ApiCommonRes{}
-	commonRes.Data = res
-	err = this.request(ctx, "api/plugin_util/RemoveAliases", req, &commonRes)
+func (this *evApi) EsMoveToAnotherIndexAliases(ctx context.Context, req dto.MoveToAnotherIndexAliasesReq) (res *proto.Response, err error) {
+
+	res, err = this.requestProtobuf(ctx, "api/plugin_util/EsMoveToAnotherIndexAliases", req)
 	if err != nil {
 		return
 	}
 	return
 }
 
-func (this *evApi) MoveToAnotherIndexAliases(ctx context.Context, req dto.MoveToAnotherIndexAliasesReq) (res *proto.Response, err error) {
-	res = new(proto.Response)
-	commonRes := vo.ApiCommonRes{}
-	commonRes.Data = res
-	err = this.request(ctx, "api/plugin_util/MoveToAnotherIndexAliases", req, &commonRes)
+func (this *evApi) EsTaskList(ctx context.Context, req dto.TaskListReq) (res *proto.Response, err error) {
+
+	res, err = this.requestProtobuf(ctx, "api/plugin_util/EsTaskList", req)
 	if err != nil {
 		return
 	}
 	return
 }
 
-func (this *evApi) TaskList(ctx context.Context, req dto.TaskListReq) (res *proto.Response, err error) {
-	res = new(proto.Response)
-	commonRes := vo.ApiCommonRes{}
-	commonRes.Data = res
-	err = this.request(ctx, "api/plugin_util/TaskList", req, &commonRes)
-	if err != nil {
-		return
-	}
-	return
-}
+func (this *evApi) EsTasksCancel(ctx context.Context, req dto.TasksCancelReq) (res *proto.Response, err error) {
 
-func (this *evApi) TasksCancel(ctx context.Context, req dto.TasksCancelReq) (res *proto.Response, err error) {
-	res = new(proto.Response)
-	commonRes := vo.ApiCommonRes{}
-	commonRes.Data = res
-	err = this.request(ctx, "api/plugin_util/TasksCancel", req, &commonRes)
+	res, err = this.requestProtobuf(ctx, "api/plugin_util/EsTasksCancel", req)
 	if err != nil {
 		return
 	}
@@ -582,39 +491,63 @@ func (this *evApi) StopDebugPlugin(ctx context.Context, req *dto.StopDebugPlugin
 }
 
 func (this *evApi) EsRunDsl(ctx context.Context, req *dto.PluginRunDsl) (res *proto.Response, err error) {
-	res = new(proto.Response)
-	commonRes := vo.ApiCommonRes{}
-	commonRes.Data = res
+
 	if req.Params != nil {
 		req.Path = fmt.Sprintf("%s?%s", req.Path, req.Params.Encode())
 	}
-	err = this.request(ctx, "api/plugin_util/EsRunDsl", req, &commonRes)
+
+	return this.requestProtobuf(ctx, "api/plugin_util/EsRunDsl", req)
+}
+
+// MysqlExecSql MysqlSelectSql  MysqlFirstSql
+// 执行sql
+func (this *evApi) MysqlExecSql(ctx context.Context, req *dto.MysqlExecReq) (rowsAffected int64, err error) {
+	data := &vo.MysqlExecSqlRes{}
+	err = this.request(ctx, "api/plugin_util/MysqlExecSql", req, &vo.ApiCommonRes{Data: data})
+	if err != nil {
+		return 0, err
+	}
+	return data.RowsAffected, nil
+}
+
+// 查询索引 dist参数必须是一个切片
+func (this *evApi) MysqlSelectSql(ctx context.Context, req *dto.MysqlSelectReq) (result []map[string]interface{}, err error) {
+	data := &vo.MysqlSelectSqlRes{}
+	err = this.request(ctx, "api/plugin_util/MysqlSelectSql", req, &vo.ApiCommonRes{Data: data})
 	if err != nil {
 		return nil, err
 	}
-
-	return res, nil
+	return data.Result, nil
 }
 
-func (this *evApi) DslHistoryListAction(ctx context.Context, req *dto.DslHistoryListReq) (res *vo.DisHistoryListRes, err error) {
-	res = new(vo.DisHistoryListRes)
-	commonRes := vo.ApiCommonRes{}
-	commonRes.Data = res
-
-	err = this.request(ctx, "api/plugin_util/DslHistoryListAction", req, &commonRes)
+func (this *evApi) MysqlFirstSql(ctx context.Context, req *dto.MysqlSelectReq) (result map[string]interface{}, err error) {
+	data := &vo.MysqlFirstSqlRes{}
+	err = this.request(ctx, "api/plugin_util/MysqlFirstSql", req, &vo.ApiCommonRes{Data: data})
 	if err != nil {
-		return nil, err
+		return data.Result, err
 	}
-
-	return res, nil
+	return data.Result, nil
 }
 
-func (this *evApi) CleanDslHistoryAction(ctx context.Context, req *dto.EsConnectData) (err error) {
-	err = this.request(ctx, "api/plugin_util/CleanDslHistoryAction", req, &vo.ApiCommonRes{})
+func (this *evApi) RedisExecCommand(ctx context.Context, req *dto.RedisExecReq) (data interface{}, err error) {
+	var res map[string]interface{}
+	err = this.request(ctx, "api/plugin_util/RedisExecCommand", req, &res)
 	if err != nil {
-		return err
+		return data, err
 	}
-	return nil
+	if cast.ToInt(res["code"]) != 0 {
+		return data, errors.New(cast.ToString(res["msg"]))
+	}
+
+	data = res["data"]
+
+	return data, nil
+}
+
+var bufferPool = sync.Pool{
+	New: func() interface{} {
+		return new(bytes.Buffer)
+	},
 }
 
 func (this *evApi) request(ctx context.Context, api API, requestData interface{}, result interface{}) error {
@@ -628,23 +561,131 @@ func (this *evApi) request(ctx context.Context, api API, requestData interface{}
 
 	// 将签名转换为 Base64 编码的字符串
 	signature := base64.StdEncoding.EncodeToString(signatureBytes)
-
-	_, err := this.client.R().
-		SetHeaders(map[string]string{
-			"X-Plugin-ID":        this.pluginId,
-			"X-Plugin-Signature": signature,
-		}).
-		SetContext(ctx).
-		SetBody(string(requestDataJSON)).
-		SetResult(&result).
-		Post(fmt.Sprintf("http://127.0.0.1:%s/%s", this.rpcPort, api))
+	t1 := time.Now()
+	res, err := this.SendRequest(ctx, api, requestDataJSON, signature)
 	if err != nil {
 		return err
 	}
+
+	if this.debug {
+		logger.DefaultLogger.Info("debug network",
+			"api", api,
+			"reqBody", string(requestDataJSON),
+			"lose time", api, time.Now().Sub(t1).String())
+	}
+
+	err = json.Unmarshal(res, result)
+
+	if err != nil {
+		return err
+	}
+
 	switch result.(type) {
 	case *vo.ApiCommonRes:
 		return result.(*vo.ApiCommonRes).Error()
 	}
 
 	return nil
+}
+
+func (this *evApi) requestProtobuf(ctx context.Context, api API, requestData interface{}) (result *proto.Response, err error) {
+
+	requestDataJSON, err := json.Marshal(requestData)
+
+	if err != nil {
+		log.Println("err", err)
+		return nil, err
+	}
+
+	// 计算 HMAC-SHA256 签名
+	mac := hmac.New(sha256.New, []byte(this.rpcKey))
+	mac.Write(requestDataJSON)
+	signatureBytes := mac.Sum(nil)
+
+	// 将签名转换为 Base64 编码的字符串
+	signature := base64.StdEncoding.EncodeToString(signatureBytes)
+	t1 := time.Now()
+	res, err := this.SendRequest(ctx, api, requestDataJSON, signature)
+	if err != nil {
+		return nil, err
+	}
+
+	if this.debug {
+		logger.DefaultLogger.Info("debug network",
+			"api", api,
+			"reqBody", string(requestDataJSON),
+			"lose time", api, time.Now().Sub(t1).String())
+	}
+
+	p := &pluginv2.CallResourceResponse{}
+
+	err = protobuf.Unmarshal(res, p)
+
+	if err != nil {
+		return nil, err
+	}
+
+	headers := map[string][]string{}
+	for k, values := range p.Headers {
+		headers[k] = values.Values
+	}
+
+	result = proto.NewResponseWithProto(int(p.Code), headers, p.Body)
+
+	//202为ev自定义code报错
+	if p.Code == 202 {
+
+		if _, ok := headers["EV-MSG"]; ok {
+			if len(headers["EV-MSG"]) > 0 {
+				err = errors.New(headers["EV-MSG"][0])
+			}
+		}
+
+	}
+
+	return result, err
+}
+
+func (this *evApi) SendRequest(ctx context.Context, api API, requestDataJSON []byte, signature string) ([]byte, error) {
+	// 构建请求对象
+	req := fasthttp.AcquireRequest()
+	defer fasthttp.ReleaseRequest(req) // 释放请求对象，防止内存泄漏
+
+	resp := fasthttp.AcquireResponse()
+	defer fasthttp.ReleaseResponse(resp) // 释放响应对象，防止内存泄漏
+
+	// 设置请求 URL
+	url := fmt.Sprintf("http://127.0.0.1:%s/%s", this.rpcPort, api)
+	req.SetRequestURI(url)
+
+	// 设置请求方法为 POST
+	req.Header.SetMethod(fasthttp.MethodPost)
+	req.Header.Set("Content-Type", "application/json")
+	// 设置自定义头
+	req.Header.Set("X-Plugin-ID", this.pluginId)
+	req.Header.Set("X-Plugin-Signature", signature)
+
+	// 设置请求体
+	req.SetBody(requestDataJSON)
+
+	// 发起请求
+
+	errCh := make(chan error, 1)
+
+	// 启动异步请求
+	go func() {
+		errCh <- this.client.Do(req, resp)
+	}()
+
+	select {
+	case <-ctx.Done(): // 如果 context 超时或取消
+		return nil, ctx.Err()
+	case err := <-errCh: // 请求完成
+		if err != nil {
+			return nil, fmt.Errorf("request failed: %w", err)
+		}
+	}
+
+	// 返回响应体
+	return resp.Body(), nil
 }

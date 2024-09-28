@@ -10,6 +10,7 @@ import (
 	"github.com/1340691923/eve-plugin-sdk-go/util"
 	plugin "github.com/hashicorp/go-plugin"
 	"google.golang.org/grpc"
+	"log"
 	"os"
 )
 
@@ -79,6 +80,8 @@ func Serve(opts ServeOpts) {
 			})
 			if err != nil {
 				panic(fmt.Sprintf("链接ev基座异常:%s", err.Error()))
+			} else {
+				log.Println(fmt.Sprintf("正常链接ev基座"))
 			}
 		}
 		util.WaitQuit(func() {

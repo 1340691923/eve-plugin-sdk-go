@@ -2,6 +2,7 @@ package dto
 
 import (
 	"github.com/1340691923/eve-plugin-sdk-go/ev_api/proto"
+	"mime/multipart"
 	"net/http"
 	"net/url"
 )
@@ -57,7 +58,17 @@ type ClusterStatsReq struct {
 
 type PerformRequest struct {
 	EsConnectData EsConnectData `json:"es_connect_data"`
-	Request       *http.Request `json:"request"`
+	Request       *Request      `json:"request"`
+}
+
+type Request struct {
+	Method        string
+	URL           *url.URL
+	Header        http.Header
+	Form          url.Values
+	PostForm      url.Values
+	MultipartForm *multipart.Form
+	JsonBody      string
 }
 
 type DslHistoryListReq struct {

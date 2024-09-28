@@ -1,7 +1,7 @@
 package util
 
 import (
-	"encoding/json"
+	"github.com/goccy/go-json"
 	"github.com/pkg/errors"
 	"io/ioutil"
 )
