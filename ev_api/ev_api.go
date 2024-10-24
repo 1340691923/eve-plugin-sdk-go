@@ -3,9 +3,6 @@ package ev_api
 import (
 	"bytes"
 	"context"
-	"crypto/hmac"
-	"crypto/sha256"
-	"encoding/base64"
 	"errors"
 	"fmt"
 	"github.com/1340691923/eve-plugin-sdk-go/backend/logger"
@@ -554,15 +551,13 @@ func (this *evApi) request(ctx context.Context, api API, requestData interface{}
 
 	requestDataJSON, _ := json.Marshal(requestData)
 
-	// 计算 HMAC-SHA256 签名
-	mac := hmac.New(sha256.New, []byte(this.rpcKey))
+	/*mac := hmac.New(sha256.New, []byte(this.rpcKey))
 	mac.Write(requestDataJSON)
 	signatureBytes := mac.Sum(nil)
 
-	// 将签名转换为 Base64 编码的字符串
-	signature := base64.StdEncoding.EncodeToString(signatureBytes)
+	signature := base64.StdEncoding.EncodeToString(signatureBytes)*/
 	t1 := time.Now()
-	res, err := this.SendRequest(ctx, api, requestDataJSON, signature)
+	res, err := this.SendRequest(ctx, api, requestDataJSON)
 	if err != nil {
 		return err
 	}
@@ -597,15 +592,8 @@ func (this *evApi) requestProtobuf(ctx context.Context, api API, requestData int
 		return nil, err
 	}
 
-	// 计算 HMAC-SHA256 签名
-	mac := hmac.New(sha256.New, []byte(this.rpcKey))
-	mac.Write(requestDataJSON)
-	signatureBytes := mac.Sum(nil)
-
-	// 将签名转换为 Base64 编码的字符串
-	signature := base64.StdEncoding.EncodeToString(signatureBytes)
 	t1 := time.Now()
-	res, err := this.SendRequest(ctx, api, requestDataJSON, signature)
+	res, err := this.SendRequest(ctx, api, requestDataJSON)
 	if err != nil {
 		return nil, err
 	}
@@ -646,7 +634,7 @@ func (this *evApi) requestProtobuf(ctx context.Context, api API, requestData int
 	return result, err
 }
 
-func (this *evApi) SendRequest(ctx context.Context, api API, requestDataJSON []byte, signature string) ([]byte, error) {
+func (this *evApi) SendRequest(ctx context.Context, api API, requestDataJSON []byte) ([]byte, error) {
 	// 构建请求对象
 	req := fasthttp.AcquireRequest()
 	defer fasthttp.ReleaseRequest(req) // 释放请求对象，防止内存泄漏
@@ -663,7 +651,7 @@ func (this *evApi) SendRequest(ctx context.Context, api API, requestDataJSON []b
 	req.Header.Set("Content-Type", "application/json")
 	// 设置自定义头
 	req.Header.Set("X-Plugin-ID", this.pluginId)
-	req.Header.Set("X-Plugin-Signature", signature)
+	//req.Header.Set("X-Plugin-Signature", signature)
 
 	// 设置请求体
 	req.SetBody(requestDataJSON)
@@ -674,7 +662,9 @@ func (this *evApi) SendRequest(ctx context.Context, api API, requestDataJSON []b
 
 	// 启动异步请求
 	go func() {
+		t := time.Now()
 		errCh <- this.client.Do(req, resp)
+		log.Println("client.do", time.Now().Sub(t).String())
 	}()
 
 	select {

@@ -7,18 +7,19 @@ import (
 	"github.com/1340691923/eve-plugin-sdk-go/ev_api/proto"
 	"github.com/pkg/errors"
 	"io/ioutil"
+	"log"
 	"net/http"
+	"time"
 )
 
 // 用于更方便的操作es
 type EvApiAdapter struct {
 	EsConnId int
-	RoleId   int
 	UserId   int
 }
 
-func NewEvWrapApi(esConnId int, roleId int, userId int) *EvApiAdapter {
-	return &EvApiAdapter{EsConnId: esConnId, RoleId: roleId, UserId: userId}
+func NewEvWrapApi(esConnId int, userId int) *EvApiAdapter {
+	return &EvApiAdapter{EsConnId: esConnId, UserId: userId}
 }
 
 // 执行sql
@@ -47,7 +48,6 @@ func (this *EvApiAdapter) EsRunDsl(ctx context.Context, req *dto.PluginRunDsl2) 
 
 	return GetEvApi().EsRunDsl(ctx, &dto.PluginRunDsl{
 		EsConnectData: &dto.EsConnectData{
-			RoleID:    this.RoleId,
 			UserID:    this.UserId,
 			EsConnect: this.EsConnId,
 		},
@@ -314,6 +314,11 @@ func (this *EvApiAdapter) EsCreate(ctx context.Context, createRequest proto.Crea
 }
 
 func (this *EvApiAdapter) EsSearch(ctx context.Context, searchRequest proto.SearchRequest, query interface{}) (res *proto.Response, err error) {
+	t := time.Now()
+	defer func() {
+		log.Println("lose time", time.Now().Sub(t).String())
+	}()
+
 	return GetEvApi().EsSearch(ctx, dto.SearchReq{
 		EsConnectData: this.buildEsConnectData(),
 		SearchReqData: dto.SearchReqData{SearchRequest: searchRequest, Query: query},
@@ -412,7 +417,7 @@ func (this *EvApiAdapter) EsTasksCancel(ctx context.Context, taskId string) (res
 
 func (this *EvApiAdapter) buildEsConnectData() dto.EsConnectData {
 	return dto.EsConnectData{
-		RoleID:    this.RoleId,
+
 		UserID:    this.UserId,
 		EsConnect: this.EsConnId,
 	}

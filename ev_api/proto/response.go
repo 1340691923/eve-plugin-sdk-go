@@ -1,7 +1,9 @@
 package proto
 
 import (
+
 	"bytes"
+
 	"github.com/goccy/go-json"
 	"github.com/pkg/errors"
 	"github.com/tidwall/gjson"
@@ -101,15 +103,7 @@ func NewResponse(statusCode int, header http.Header, readCloser io.ReadCloser) (
 		return
 	}
 
-	// 获取 []byte 数据
-	bodyBytes := buffer.Bytes()
-
-	if err != nil {
-		err = errors.WithStack(err)
-		return
-	}
-
-	res.resByte = bodyBytes
+	res.resByte = buffer.Bytes()
 	res.header = header
 	res.statusCode = statusCode
 	return

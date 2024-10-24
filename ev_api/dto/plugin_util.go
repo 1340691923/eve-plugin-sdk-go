@@ -18,7 +18,6 @@ type StopDebugPlugin struct {
 }
 
 type EsConnectData struct {
-	RoleID    int `json:"role_id"`
 	UserID    int `json:"user_id"`
 	EsConnect int `json:"es_connect"`
 }
