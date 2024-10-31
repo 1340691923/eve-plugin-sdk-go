@@ -2,8 +2,10 @@ package pkg
 
 import (
 	"context"
+	"github.com/1340691923/eve-plugin-sdk-go/ev_api/bson"
 	"github.com/1340691923/eve-plugin-sdk-go/ev_api/proto"
 	"net/http"
+	"time"
 )
 
 type ClientInterface interface {
@@ -66,4 +68,10 @@ type ClientInterface interface {
 
 	//redis数据源接口
 	RedisExecCommand(ctx context.Context, dbName int, args ...interface{}) (data interface{}, err error)
+
+	//mongo数据源接口
+
+	ExecMongoCommand(ctx context.Context, dbName string, command bson.D, timeout time.Duration) (res bson.M, err error)
+
+	ShowMongoDbs(ctx context.Context) ([]string, error)
 }

@@ -1,11 +1,11 @@
 package ev_api
 
 import (
-	"bytes"
 	"context"
 	"errors"
 	"fmt"
 	"github.com/1340691923/eve-plugin-sdk-go/backend/logger"
+	"github.com/1340691923/eve-plugin-sdk-go/ev_api/bson"
 	"github.com/1340691923/eve-plugin-sdk-go/ev_api/dto"
 	"github.com/1340691923/eve-plugin-sdk-go/ev_api/proto"
 	"github.com/1340691923/eve-plugin-sdk-go/ev_api/vo"
@@ -527,35 +527,64 @@ func (this *evApi) MysqlFirstSql(ctx context.Context, req *dto.MysqlSelectReq) (
 }
 
 func (this *evApi) RedisExecCommand(ctx context.Context, req *dto.RedisExecReq) (data interface{}, err error) {
-	var res map[string]interface{}
-	err = this.request(ctx, "api/plugin_util/RedisExecCommand", req, &res)
+
+	result, err := this.requestProtobuf(ctx, "api/plugin_util/RedisExecCommand", req)
 	if err != nil {
 		return data, err
 	}
-	if cast.ToInt(res["code"]) != 0 {
-		return data, errors.New(cast.ToString(res["msg"]))
+
+	if result.StatusErr() != nil {
+		return data, result.StatusErr()
 	}
 
-	data = res["data"]
+	res := map[string]interface{}{}
+
+	err = json.Unmarshal(result.ResByte(), &res)
+
+	if err != nil {
+		return data, err
+	}
+
+	return res["data"], nil
+}
+
+func (this *evApi) ExecMongoCommand(ctx context.Context, req *dto.MongoExecReq) (data bson.M, err error) {
+
+	res, err := this.requestProtobuf(ctx, "api/plugin_util/MongoExecCommand", req)
+	if err != nil {
+		return nil, err
+	}
+	if res.StatusErr() != nil {
+		return nil, res.StatusErr()
+	}
+
+	data = map[string]interface{}{}
+
+	err = json.Unmarshal(res.ResByte(), &data)
+
+	if err != nil {
+		return nil, err
+	}
 
 	return data, nil
 }
 
-var bufferPool = sync.Pool{
-	New: func() interface{} {
-		return new(bytes.Buffer)
-	},
+func (this *evApi) ShowMongoDbs(ctx context.Context, req *dto.ShowMongoDbsReq) (dbList []string, err error) {
+	res := &vo.ApiCommonRes{Data: dbList}
+	err = this.request(ctx, "api/plugin_util/ShowMongoDbs", req, res)
+	if err != nil {
+		return nil, err
+	}
+
+	return cast.ToStringSlice(res.Data), nil
 }
 
 func (this *evApi) request(ctx context.Context, api API, requestData interface{}, result interface{}) error {
+	var requestDataJSON = []byte(`{}`)
+	if requestData != nil {
+		requestDataJSON, _ = json.Marshal(requestData)
+	}
 
-	requestDataJSON, _ := json.Marshal(requestData)
-
-	/*mac := hmac.New(sha256.New, []byte(this.rpcKey))
-	mac.Write(requestDataJSON)
-	signatureBytes := mac.Sum(nil)
-
-	signature := base64.StdEncoding.EncodeToString(signatureBytes)*/
 	t1 := time.Now()
 	res, err := this.SendRequest(ctx, api, requestDataJSON)
 	if err != nil {

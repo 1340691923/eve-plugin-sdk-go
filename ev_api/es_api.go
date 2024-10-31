@@ -3,6 +3,7 @@ package ev_api
 import (
 	"context"
 	"github.com/1340691923/eve-plugin-sdk-go/backend/logger"
+	"github.com/1340691923/eve-plugin-sdk-go/ev_api/bson"
 	"github.com/1340691923/eve-plugin-sdk-go/ev_api/dto"
 	"github.com/1340691923/eve-plugin-sdk-go/ev_api/proto"
 	"github.com/pkg/errors"
@@ -98,9 +99,21 @@ func (this *EvApiAdapter) RedisExecCommand(ctx context.Context, dbName int, args
 	return GetEvApi().RedisExecCommand(ctx, &dto.RedisExecReq{
 		EsConnectData: this.buildEsConnectData(),
 		DbName:        dbName,
-
-		Args: args,
+		Args:          args,
 	})
+}
+
+func (this *EvApiAdapter) ExecMongoCommand(ctx context.Context, dbName string, command bson.D, timeout time.Duration) (res bson.M, err error) {
+	return GetEvApi().ExecMongoCommand(ctx, &dto.MongoExecReq{
+		EsConnectData: this.buildEsConnectData(),
+		DbName:        dbName,
+		Command:       command,
+		Timeout:       timeout,
+	})
+}
+
+func (this *EvApiAdapter) ShowMongoDbs(ctx context.Context) ([]string, error) {
+	return GetEvApi().ShowMongoDbs(ctx, &dto.ShowMongoDbsReq{EsConnectData: this.buildEsConnectData()})
 }
 
 func (this *EvApiAdapter) EsCatNodes(ctx context.Context, h []string) (res *proto.Response, err error) {
