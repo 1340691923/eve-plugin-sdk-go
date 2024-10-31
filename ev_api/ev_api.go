@@ -10,7 +10,8 @@ import (
 	"github.com/1340691923/eve-plugin-sdk-go/ev_api/proto"
 	"github.com/1340691923/eve-plugin-sdk-go/ev_api/vo"
 	"github.com/1340691923/eve-plugin-sdk-go/genproto/pluginv2"
-	"github.com/goccy/go-json"
+	json2 "github.com/goccy/go-json"
+	"encoding/json"
 	"github.com/spf13/cast"
 	"github.com/valyala/fasthttp"
 	protobuf "google.golang.org/protobuf/proto"
@@ -454,17 +455,18 @@ func (this *evApi) StoreExec(ctx context.Context, sql string, args ...interface{
 func (this *evApi) StoreSelect(ctx context.Context, dest interface{}, sql string, args ...interface{}) (err error) {
 	data := &vo.SelectRes{}
 	data.Result = &dest
-	err = this.request(ctx, "api/plugin_util/SelectSql", &dto.SelectReq{Sql: sql, PluginId: this.pluginId, Args: args}, &vo.ApiCommonRes{Data: data})
+	err = this.request(ctx, "api/plugin_util/SelectSql", &dto.SelectReq{Sql: sql, PluginId: this.pluginId, Args: args}, &vo.ApiCommonRes{Data: data},true)
 	if err != nil {
 		return err
 	}
+
 	return nil
 }
 
 func (this *evApi) StoreFirst(ctx context.Context, dest interface{}, sql string, args ...interface{}) (err error) {
 	data := &vo.SelectRes{}
 	data.Result = &dest
-	err = this.request(ctx, "api/plugin_util/FirstSql", &dto.SelectReq{Sql: sql, PluginId: this.pluginId, Args: args}, &vo.ApiCommonRes{Data: data})
+	err = this.request(ctx, "api/plugin_util/FirstSql", &dto.SelectReq{Sql: sql, PluginId: this.pluginId, Args: args}, &vo.ApiCommonRes{Data: data},true)
 	if err != nil {
 		return err
 	}
@@ -539,7 +541,7 @@ func (this *evApi) RedisExecCommand(ctx context.Context, req *dto.RedisExecReq) 
 
 	res := map[string]interface{}{}
 
-	err = json.Unmarshal(result.ResByte(), &res)
+	err = json2.Unmarshal(result.ResByte(), &res)
 
 	if err != nil {
 		return data, err
@@ -560,7 +562,7 @@ func (this *evApi) ExecMongoCommand(ctx context.Context, req *dto.MongoExecReq) 
 
 	data = map[string]interface{}{}
 
-	err = json.Unmarshal(res.ResByte(), &data)
+	err = json2.Unmarshal(res.ResByte(), &data)
 
 	if err != nil {
 		return nil, err
@@ -579,10 +581,10 @@ func (this *evApi) ShowMongoDbs(ctx context.Context, req *dto.ShowMongoDbsReq) (
 	return cast.ToStringSlice(res.Data), nil
 }
 
-func (this *evApi) request(ctx context.Context, api API, requestData interface{}, result interface{}) error {
+func (this *evApi) request(ctx context.Context, api API, requestData interface{}, result interface{},nativeParse ...bool) error {
 	var requestDataJSON = []byte(`{}`)
 	if requestData != nil {
-		requestDataJSON, _ = json.Marshal(requestData)
+		requestDataJSON, _ = json2.Marshal(requestData)
 	}
 
 	t1 := time.Now()
@@ -597,8 +599,12 @@ func (this *evApi) request(ctx context.Context, api API, requestData interface{}
 			"reqBody", string(requestDataJSON),
 			"lose time", api, time.Now().Sub(t1).String())
 	}
+	if len(nativeParse) > 0{
+		err = json.Unmarshal(res, result)
+	}else{
+		err = json2.Unmarshal(res, result)
+	}
 
-	err = json.Unmarshal(res, result)
 
 	if err != nil {
 		return err
@@ -614,7 +620,7 @@ func (this *evApi) request(ctx context.Context, api API, requestData interface{}
 
 func (this *evApi) requestProtobuf(ctx context.Context, api API, requestData interface{}) (result *proto.Response, err error) {
 
-	requestDataJSON, err := json.Marshal(requestData)
+	requestDataJSON, err := json2.Marshal(requestData)
 
 	if err != nil {
 		log.Println("err", err)
