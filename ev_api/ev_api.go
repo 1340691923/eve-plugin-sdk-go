@@ -2,6 +2,7 @@ package ev_api
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"github.com/1340691923/eve-plugin-sdk-go/backend/logger"
@@ -11,7 +12,6 @@ import (
 	"github.com/1340691923/eve-plugin-sdk-go/ev_api/vo"
 	"github.com/1340691923/eve-plugin-sdk-go/genproto/pluginv2"
 	json2 "github.com/goccy/go-json"
-	"encoding/json"
 	"github.com/spf13/cast"
 	"github.com/valyala/fasthttp"
 	protobuf "google.golang.org/protobuf/proto"
@@ -455,7 +455,7 @@ func (this *evApi) StoreExec(ctx context.Context, sql string, args ...interface{
 func (this *evApi) StoreSelect(ctx context.Context, dest interface{}, sql string, args ...interface{}) (err error) {
 	data := &vo.SelectRes{}
 	data.Result = &dest
-	err = this.request(ctx, "api/plugin_util/SelectSql", &dto.SelectReq{Sql: sql, PluginId: this.pluginId, Args: args}, &vo.ApiCommonRes{Data: data},true)
+	err = this.request(ctx, "api/plugin_util/SelectSql", &dto.SelectReq{Sql: sql, PluginId: this.pluginId, Args: args}, &vo.ApiCommonRes{Data: data}, true)
 	if err != nil {
 		return err
 	}
@@ -466,7 +466,7 @@ func (this *evApi) StoreSelect(ctx context.Context, dest interface{}, sql string
 func (this *evApi) StoreFirst(ctx context.Context, dest interface{}, sql string, args ...interface{}) (err error) {
 	data := &vo.SelectRes{}
 	data.Result = &dest
-	err = this.request(ctx, "api/plugin_util/FirstSql", &dto.SelectReq{Sql: sql, PluginId: this.pluginId, Args: args}, &vo.ApiCommonRes{Data: data},true)
+	err = this.request(ctx, "api/plugin_util/FirstSql", &dto.SelectReq{Sql: sql, PluginId: this.pluginId, Args: args}, &vo.ApiCommonRes{Data: data}, true)
 	if err != nil {
 		return err
 	}
@@ -512,7 +512,7 @@ func (this *evApi) MysqlExecSql(ctx context.Context, req *dto.MysqlExecReq) (row
 // 查询索引 dist参数必须是一个切片
 func (this *evApi) MysqlSelectSql(ctx context.Context, req *dto.MysqlSelectReq) (result []map[string]interface{}, err error) {
 	data := &vo.MysqlSelectSqlRes{}
-	err = this.request(ctx, "api/plugin_util/MysqlSelectSql", req, &vo.ApiCommonRes{Data: data})
+	err = this.request(ctx, "api/plugin_util/MysqlSelectSql", req, &vo.ApiCommonRes{Data: data}, true)
 	if err != nil {
 		return nil, err
 	}
@@ -521,7 +521,7 @@ func (this *evApi) MysqlSelectSql(ctx context.Context, req *dto.MysqlSelectReq) 
 
 func (this *evApi) MysqlFirstSql(ctx context.Context, req *dto.MysqlSelectReq) (result map[string]interface{}, err error) {
 	data := &vo.MysqlFirstSqlRes{}
-	err = this.request(ctx, "api/plugin_util/MysqlFirstSql", req, &vo.ApiCommonRes{Data: data})
+	err = this.request(ctx, "api/plugin_util/MysqlFirstSql", req, &vo.ApiCommonRes{Data: data}, true)
 	if err != nil {
 		return data.Result, err
 	}
@@ -581,7 +581,7 @@ func (this *evApi) ShowMongoDbs(ctx context.Context, req *dto.ShowMongoDbsReq) (
 	return cast.ToStringSlice(res.Data), nil
 }
 
-func (this *evApi) request(ctx context.Context, api API, requestData interface{}, result interface{},nativeParse ...bool) error {
+func (this *evApi) request(ctx context.Context, api API, requestData interface{}, result interface{}, nativeParse ...bool) error {
 	var requestDataJSON = []byte(`{}`)
 	if requestData != nil {
 		requestDataJSON, _ = json2.Marshal(requestData)
@@ -599,12 +599,11 @@ func (this *evApi) request(ctx context.Context, api API, requestData interface{}
 			"reqBody", string(requestDataJSON),
 			"lose time", api, time.Now().Sub(t1).String())
 	}
-	if len(nativeParse) > 0{
+	if len(nativeParse) > 0 {
 		err = json.Unmarshal(res, result)
-	}else{
+	} else {
 		err = json2.Unmarshal(res, result)
 	}
-
 
 	if err != nil {
 		return err
