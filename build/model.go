@@ -3,16 +3,17 @@ package build
 import "fmt"
 
 type PluginJsonData struct {
-	Version         string   `json:"version"`
-	MainGoFile      string   `json:"main_go_file"`
-	PluginName      string   `json:"plugin_name"`
-	BackendDebug    bool     `json:"backend_debug"`
-	FrontendDebug   bool     `json:"frontend_debug"`
-	PluginAlias     string   `json:"plugin_alias"`
-	FrontendRoutes  []*Route `json:"frontend_routes"`
-	FrontendDevPort int      `json:"frontend_dev_port"`
-
-	BackendRoutes []*BackendRoute `json:"backend_routes"`
+	Developer string `json:"developer"`
+	Version         string          `json:"version"`
+	MainGoFile      string          `json:"main_go_file"`
+	PluginName      string          `json:"plugin_name"`
+	BackendDebug    bool            `json:"backend_debug"`
+	FrontendDebug   bool            `json:"frontend_debug"`
+	PluginAlias     string          `json:"plugin_alias"`
+	FrontendRoutes  []*Route        `json:"frontend_routes"`
+	FrontendDevPort int             `json:"frontend_dev_port"`
+	Frontend2c      bool            `json:"frontend_2c"`
+	BackendRoutes   []*BackendRoute `json:"backend_routes"`
 }
 
 type BackendRoute struct {
@@ -29,12 +30,14 @@ type Route struct {
 }
 
 type RouteMeta struct {
-	Title string `json:"title"`
-	Icon  string `json:"icon"`
+	Title   string `json:"title"`
+	Icon    string `json:"icon"`
+	Hidden  bool   `json:"hidden"`
+	Service bool   `json:"service"`
 }
 
 func (this *PluginJsonData) String() string {
-	return fmt.Sprintf("插件名：%s，main文件：%s,插件别名：%s,版本号：%s", this.PluginName, this.MainGoFile, this.PluginAlias, this.Version)
+	return fmt.Sprintf("插件名：%s，开发者：%s,main文件：%s,插件别名：%s,版本号：%s", this.PluginName,this.Developer, this.MainGoFile, this.PluginAlias, this.Version)
 }
 
 type Gormigrate struct {

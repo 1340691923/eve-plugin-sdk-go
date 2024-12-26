@@ -21,7 +21,6 @@ import (
 )
 
 type evApi struct {
-	rpcKey   string
 	rpcPort  string
 	debug    bool
 	pluginId string
@@ -37,14 +36,13 @@ func init() {
 	once = new(sync.Once)
 }
 
-func SetEvApi(rpcKey, rpcPort, pluginId string, debug bool) *evApi {
+func SetEvApi(rpcPort, pluginId string, debug bool) *evApi {
 	client := &fasthttp.Client{
 		ReadTimeout:  120 * time.Second,
 		WriteTimeout: 120 * time.Second,
 	}
 	once.Do(func() {
 		evApiObj = &evApi{
-			rpcKey:   rpcKey,
 			rpcPort:  rpcPort,
 			pluginId: pluginId,
 			debug:    debug,
@@ -462,6 +460,18 @@ func (this *evApi) StoreSelect(ctx context.Context, dest interface{}, sql string
 
 	return nil
 }
+
+// 查询索引 dist参数必须是一个切片
+func (this *evApi) GetRoles4UserID(ctx context.Context,userId int) (roleIds []int,err error) {
+	data := &vo.GetRoles4UserIdRes{}
+	err = this.request(ctx, "api/plugin_util/GetRoles4UserID",
+		&dto.GetRoles4UserIdReq{UserId: userId}, &vo.ApiCommonRes{Data: data})
+	if err != nil {
+		return data.RoleIds, err
+	}
+	return data.RoleIds, nil
+}
+
 
 func (this *evApi) StoreFirst(ctx context.Context, dest interface{}, sql string, args ...interface{}) (err error) {
 	data := &vo.SelectRes{}

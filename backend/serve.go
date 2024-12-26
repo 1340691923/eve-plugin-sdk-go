@@ -42,8 +42,6 @@ type ServeOpts struct {
 
 	EvRpcPort string
 
-	EvRpcKey string
-
 	ExitCallback func()
 }
 
@@ -82,7 +80,7 @@ func asGRPCServeOpts(opts ServeOpts) grpcplugin.ServeOpts {
 
 func Serve(opts ServeOpts) {
 	var pluginJson = opts.PluginJson
-	ev_api.SetEvApi(opts.EvRpcKey, opts.EvRpcPort, pluginJson.PluginAlias, pluginJson.BackendDebug)
+	ev_api.SetEvApi(opts.EvRpcPort, pluginJson.PluginAlias, pluginJson.BackendDebug)
 	opts.debug = pluginJson.BackendDebug
 	opts.pluginID = pluginJson.PluginAlias
 	opts.pluginVersion = pluginJson.Version

@@ -110,6 +110,12 @@ func (this *Build) DarwinAmd64() error {
 		this.EvVersion, this.MainGoFile, this.PluginAlias))
 }
 
+func (this *Build) DarwinArm64() error {
+	return buildBackend(newBuildConfig("darwin", "arm64",
+		this.EvVersion, this.MainGoFile, this.PluginAlias))
+}
+
+
 func resetEnv() {
 	env := map[string]string{}
 	env["GOOS"] = runtime.GOOS
@@ -165,6 +171,7 @@ func buildPluginSvr(pluginJsonFile string) (err error) {
 		b.LinuxArm64,
 		b.LinuxAmd64,
 		b.DarwinAmd64,
+		b.DarwinArm64,
 		b.WindowsAmd64,
 	)
 	if err != nil {

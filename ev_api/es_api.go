@@ -13,14 +13,13 @@ import (
 	"time"
 )
 
-// 用于更方便的操作es
 type EvApiAdapter struct {
-	EsConnId int
+	ConnId int
 	UserId   int
 }
 
-func NewEvWrapApi(esConnId int, userId int) *EvApiAdapter {
-	return &EvApiAdapter{EsConnId: esConnId, UserId: userId}
+func NewEvWrapApi(connId int, userId int) *EvApiAdapter {
+	return &EvApiAdapter{ConnId: connId, UserId: userId}
 }
 
 // 执行sql
@@ -31,6 +30,11 @@ func (this *EvApiAdapter) StoreExec(ctx context.Context, sql string, args ...int
 // 查询索引 dist参数必须是一个切片
 func (this *EvApiAdapter) StoreSelect(ctx context.Context, dest interface{}, sql string, args ...interface{}) (err error) {
 	return GetEvApi().StoreSelect(ctx, dest, sql, args...)
+}
+
+// 查询索引 dist参数必须是一个切片
+func (this *EvApiAdapter) GetRoles4UserID(ctx context.Context, userId int) (roleIds []int,err error) {
+	return GetEvApi().GetRoles4UserID(ctx, userId)
 }
 
 func (this *EvApiAdapter) StoreFirst(ctx context.Context, dest interface{}, sql string, args ...interface{}) (err error) {
@@ -50,7 +54,7 @@ func (this *EvApiAdapter) EsRunDsl(ctx context.Context, req *dto.PluginRunDsl2) 
 	return GetEvApi().EsRunDsl(ctx, &dto.PluginRunDsl{
 		EsConnectData: &dto.EsConnectData{
 			UserID:    this.UserId,
-			EsConnect: this.EsConnId,
+			EsConnect: this.ConnId,
 		},
 		Params:     req.Params,
 		HttpMethod: req.HttpMethod,
@@ -430,8 +434,7 @@ func (this *EvApiAdapter) EsTasksCancel(ctx context.Context, taskId string) (res
 
 func (this *EvApiAdapter) buildEsConnectData() dto.EsConnectData {
 	return dto.EsConnectData{
-
 		UserID:    this.UserId,
-		EsConnect: this.EsConnId,
+		EsConnect: this.ConnId,
 	}
 }

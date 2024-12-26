@@ -1,7 +1,7 @@
 package util
 
 import (
-	"net/http"
+	"github.com/gin-gonic/gin"
 	"strconv"
 )
 
@@ -9,8 +9,8 @@ const (
 	EvUserID = "Ev-UserID"
 )
 
-func GetEvUserID(req *http.Request) int {
-	userId, err := strconv.Atoi(req.Header.Get(EvUserID))
+func GetEvUserID(ctx *gin.Context) int {
+	userId, err := strconv.Atoi(ctx.GetHeader(EvUserID))
 	if err != nil {
 		return 0
 	}
