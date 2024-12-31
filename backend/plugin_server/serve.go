@@ -36,12 +36,19 @@ var (
 	Debug            bool
 	TmpFileStorePath string
 	PluginAlias      string
+	DbType string
+)
+
+const (
+	MysqlDbTyp  = "mysql"
+	SqliteDbTyp = "sqlite3"
 )
 
 func init() {
 	flag.StringVar(&TmpFileStorePath, "tmpFileStorePath", "store_file_dir", "临时文件存放目录")
 	flag.StringVar(&EvRpcPort, "evRpcPort", "8091", "ev基座内网访问端口")
 	flag.BoolVar(&Debug, "debug", false, "是否开启调试")
+	flag.StringVar(&DbType, "dbType", SqliteDbTyp, "存储类型")
 }
 
 func Serve(opts ServeOpts) {
@@ -58,6 +65,9 @@ func Serve(opts ServeOpts) {
 	}
 	if opts.pluginJson != nil {
 		opts.pluginJson.BackendDebug = Debug
+	}
+	if opts.Migration == nil{
+		opts.Migration = new(build.Gormigrate)
 	}
 
 	PluginAlias = opts.pluginJson.PluginAlias

@@ -53,9 +53,11 @@ type Migration struct {
 	// 版本ID
 	ID string `json:"id"`
 	// 迁移到当前版本需要的执行Sql
-	MigrateSqls []*ExecSql `json:"migrate_sqls"`
+	SqliteMigrateSqls []*ExecSql `json:"migrate_sqls"`
+	MysqlMigrateSqls []*ExecSql `json:"mysql_migrate_sqls"`
 	// 回退到当前版本需要的执行Sql
-	Rollback []*ExecSql `json:"rollback"`
+	SqliteRollback []*ExecSql `json:"rollback"`
+	MysqlRollback []*ExecSql `json:"mysql_rollback"`
 }
 
 type PluginInitRespData struct {
