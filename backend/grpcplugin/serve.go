@@ -15,9 +15,11 @@ import (
 )
 
 type ServeOpts struct {
-	PluginID         string
-	PluginJson       *build.PluginJsonData
-	ResourceServer   ResourceServer
+	PluginID       string
+	PluginJson     *build.PluginJsonData
+	ResourceServer ResourceServer
+	LiveServer     LiveServer
+
 	PluginInfoServer PluginInfoServer
 
 	GRPCServer func(options []grpc.ServerOption) *grpc.Server
@@ -34,6 +36,12 @@ func Serve(opts ServeOpts) {
 	if opts.ResourceServer != nil {
 		pSet["resource"] = &ResourceGRPCPlugin{
 			ResourceServer: opts.ResourceServer,
+		}
+	}
+
+	if opts.LiveServer != nil {
+		pSet["live"] = &LiveGRPCPlugin{
+			LiveServer: opts.LiveServer,
 		}
 	}
 

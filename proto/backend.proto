@@ -100,12 +100,33 @@ service PluginInfo {
   rpc CheckHealth(CheckHealthRequest) returns (CheckHealthResponse);
 }
 
+service Live {
+  rpc Pub2Channel(Pub2ChannelRequest) returns (Pub2ChannelResponse);
+}
 
 message CheckHealthRequest {
   PluginContext pluginContext = 1;
 
   // Environment info
   map<string,string> headers = 2;
+}
+
+message Pub2ChannelRequest {
+  PluginContext pluginContext = 1;
+  string channel = 2;
+  bytes jsonDetails = 3;
+}
+
+message Pub2ChannelResponse {
+  enum PubStatus {
+    UNKNOWN = 0;
+    OK = 1;
+    ERROR = 2;
+  }
+
+  PubStatus status = 1;
+  string message = 2;
+  bytes jsonDetails = 3;
 }
 
 message CheckHealthResponse {

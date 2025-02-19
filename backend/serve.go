@@ -36,6 +36,8 @@ type ServeOpts struct {
 
 	CallResourceHandler CallResourceHandler
 
+	LiveHandler LiveHandler
+
 	GRPCSettings GRPCSettings
 
 	debug bool
@@ -69,6 +71,10 @@ func asGRPCServeOpts(opts ServeOpts) grpcplugin.ServeOpts {
 
 	pluginOpts := grpcplugin.ServeOpts{
 		PluginInfoServer: newPluginInfoSDKAdapter(opts.PluginInfoHandler, opts.CheckHealthHandler),
+	}
+
+	if opts.LiveHandler != nil {
+		pluginOpts.LiveServer = newLiveSDKAdapter(opts.LiveHandler)
 	}
 
 	if opts.CallResourceHandler != nil {

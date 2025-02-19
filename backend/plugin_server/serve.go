@@ -22,6 +22,8 @@ type ServeOpts struct {
 
 	FrontendFiles embed.FS
 
+	LiveHandler backend.LiveHandler
+
 	GRPCSettings backend.GRPCSettings
 
 	evRpcPort string
@@ -36,7 +38,7 @@ var (
 	Debug            bool
 	TmpFileStorePath string
 	PluginAlias      string
-	DbType string
+	DbType           string
 )
 
 const (
@@ -66,7 +68,7 @@ func Serve(opts ServeOpts) {
 	if opts.pluginJson != nil {
 		opts.pluginJson.BackendDebug = Debug
 	}
-	if opts.Migration == nil{
+	if opts.Migration == nil {
 		opts.Migration = new(build.Gormigrate)
 	}
 
@@ -77,6 +79,7 @@ func Serve(opts ServeOpts) {
 		CallResourceHandler: call_resource.NewResourceHandler(opts.WebEngine, opts.FrontendFiles),
 		CheckHealthHandler:  check_health.NewCheckHealthSvr(opts.pluginJson, opts.Migration, opts.WebEngine),
 		GRPCSettings:        opts.GRPCSettings,
+		LiveHandler:         opts.LiveHandler,
 		EvRpcPort:           opts.evRpcPort,
 		ExitCallback:        opts.ExitCallback,
 	})

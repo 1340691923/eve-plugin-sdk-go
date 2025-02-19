@@ -17,10 +17,10 @@ func (t ConvertToProtobuf) User(user *User) *pluginv2.User {
 	}
 
 	return &pluginv2.User{
-		Login:	user.Login,
-		Name:	user.Name,
-		Email:	user.Email,
-		Role:	user.Role,
+		Login: user.Login,
+		Name:  user.Name,
+		Email: user.Email,
+		Role:  user.Role,
 	}
 }
 
@@ -30,9 +30,9 @@ func (t ConvertToProtobuf) AppInstanceSettings(s *AppInstanceSettings) *pluginv2
 	}
 
 	return &pluginv2.AppInstanceSettings{
-		JsonData:	s.JSONData,
-		DecryptedSecureJsonData:	s.DecryptedSecureJSONData,
-		LastUpdatedMS:	s.Updated.UnixNano() / int64(time.Millisecond),
+		JsonData:                s.JSONData,
+		DecryptedSecureJsonData: s.DecryptedSecureJSONData,
+		LastUpdatedMS:           s.Updated.UnixNano() / int64(time.Millisecond),
 	}
 }
 
@@ -42,27 +42,27 @@ func (t ConvertToProtobuf) DataSourceInstanceSettings(s *DataSourceInstanceSetti
 	}
 
 	return &pluginv2.DataSourceInstanceSettings{
-		Id:	s.ID,
-		Uid:	s.UID,
-		Name:	s.Name,
-		Url:	s.URL,
-		User:	s.User,
-		Database:	s.Database,
-		BasicAuthEnabled:	s.BasicAuthEnabled,
-		BasicAuthUser:	s.BasicAuthUser,
-		JsonData:	s.JSONData,
-		DecryptedSecureJsonData:	s.DecryptedSecureJSONData,
-		LastUpdatedMS:	s.Updated.UnixNano() / int64(time.Millisecond),
+		Id:                      s.ID,
+		Uid:                     s.UID,
+		Name:                    s.Name,
+		Url:                     s.URL,
+		User:                    s.User,
+		Database:                s.Database,
+		BasicAuthEnabled:        s.BasicAuthEnabled,
+		BasicAuthUser:           s.BasicAuthUser,
+		JsonData:                s.JSONData,
+		DecryptedSecureJsonData: s.DecryptedSecureJSONData,
+		LastUpdatedMS:           s.Updated.UnixNano() / int64(time.Millisecond),
 	}
 }
 
 func (t ConvertToProtobuf) PluginContext(pluginCtx PluginContext) *pluginv2.PluginContext {
 	return &pluginv2.PluginContext{
-		OrgId:	pluginCtx.OrgID,
-		PluginId:	pluginCtx.PluginID,
-		User:	t.User(pluginCtx.User),
-		AppInstanceSettings:	t.AppInstanceSettings(pluginCtx.AppInstanceSettings),
-		DataSourceInstanceSettings:	t.DataSourceInstanceSettings(pluginCtx.DataSourceInstanceSettings),
+		OrgId:                      pluginCtx.OrgID,
+		PluginId:                   pluginCtx.PluginID,
+		User:                       t.User(pluginCtx.User),
+		AppInstanceSettings:        t.AppInstanceSettings(pluginCtx.AppInstanceSettings),
+		DataSourceInstanceSettings: t.DataSourceInstanceSettings(pluginCtx.DataSourceInstanceSettings),
 	}
 }
 
@@ -74,19 +74,19 @@ func (t ConvertToProtobuf) CallResourceResponse(resp *CallResourceResponse) *plu
 	}
 
 	return &pluginv2.CallResourceResponse{
-		Headers:	headers,
-		Code:	int32(resp.Status),
-		Body:	resp.Body,
+		Headers: headers,
+		Code:    int32(resp.Status),
+		Body:    resp.Body,
 	}
 }
 
 func (t ConvertToProtobuf) CallResourceRequest(req *CallResourceRequest) *pluginv2.CallResourceRequest {
 	protoReq := &pluginv2.CallResourceRequest{
-		PluginContext:	t.PluginContext(req.PluginContext),
-		Path:	req.Path,
-		Method:	req.Method,
-		Url:	req.URL,
-		Body:	req.Body,
+		PluginContext: t.PluginContext(req.PluginContext),
+		Path:          req.Path,
+		Method:        req.Method,
+		Url:           req.URL,
+		Body:          req.Body,
 	}
 	if req.Headers == nil {
 		return protoReq
@@ -101,16 +101,16 @@ func (t ConvertToProtobuf) CallResourceRequest(req *CallResourceRequest) *plugin
 func (f ConvertToProtobuf) PluginInfoGetRes(protoResp *PluginInfoGetRes) *pluginv2.PluginInfoGetRes {
 
 	return &pluginv2.PluginInfoGetRes{
-		PluginID:	protoResp.PluginID,
-		PluginVersion:	protoResp.PluginVersion,
+		PluginID:      protoResp.PluginID,
+		PluginVersion: protoResp.PluginVersion,
 	}
 }
 
 func (t ConvertToProtobuf) CheckHealthResponse(res *CheckHealthResult) *pluginv2.CheckHealthResponse {
 	return &pluginv2.CheckHealthResponse{
-		Status:	t.HealthStatus(res.Status),
-		Message:	res.Message,
-		JsonDetails:	res.JSONDetails,
+		Status:      t.HealthStatus(res.Status),
+		Message:     res.Message,
+		JsonDetails: res.JSONDetails,
 	}
 }
 
@@ -124,4 +124,24 @@ func (t ConvertToProtobuf) HealthStatus(status HealthStatus) pluginv2.CheckHealt
 		return pluginv2.CheckHealthResponse_ERROR
 	}
 	panic("unsupported protobuf health status type in sdk")
+}
+
+func (t ConvertToProtobuf) Pub2ChannelResponse(res *Pub2ChannelResponse) *pluginv2.Pub2ChannelResponse {
+	return &pluginv2.Pub2ChannelResponse{
+		Status:      t.PubStatus(res.Status),
+		Message:     res.Message,
+		JsonDetails: res.JsonDetails,
+	}
+}
+
+func (t ConvertToProtobuf) PubStatus(status PubStatus) pluginv2.Pub2ChannelResponse_PubStatus {
+	switch status {
+	case PubStatusUnknown:
+		return pluginv2.Pub2ChannelResponse_UNKNOWN
+	case PubStatusOk:
+		return pluginv2.Pub2ChannelResponse_OK
+	case PubStatusError:
+		return pluginv2.Pub2ChannelResponse_ERROR
+	}
+	panic("unsupported protobuf pub status type in sdk")
 }

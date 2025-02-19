@@ -449,6 +449,18 @@ func (this *evApi) StoreExec(ctx context.Context, sql string, args ...interface{
 	return data.RowsAffected, nil
 }
 
+func (this *evApi) LiveBroadcast(ctx context.Context, channel string, data interface{}) (err error) {
+
+	err = this.request(ctx, "api/plugin_util/LiveBroadcast", map[string]interface{}{
+		"channel": this.pluginId + "$v$" + channel,
+		"data":    data,
+	}, &vo.ApiCommonRes{})
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 // 查询索引 dist参数必须是一个切片
 func (this *evApi) StoreSelect(ctx context.Context, dest interface{}, sql string, args ...interface{}) (err error) {
 	data := &vo.SelectRes{}
@@ -462,7 +474,7 @@ func (this *evApi) StoreSelect(ctx context.Context, dest interface{}, sql string
 }
 
 // 查询索引 dist参数必须是一个切片
-func (this *evApi) GetRoles4UserID(ctx context.Context,userId int) (roleIds []int,err error) {
+func (this *evApi) GetRoles4UserID(ctx context.Context, userId int) (roleIds []int, err error) {
 	data := &vo.GetRoles4UserIdRes{}
 	err = this.request(ctx, "api/plugin_util/GetRoles4UserID",
 		&dto.GetRoles4UserIdReq{UserId: userId}, &vo.ApiCommonRes{Data: data})
@@ -471,7 +483,6 @@ func (this *evApi) GetRoles4UserID(ctx context.Context,userId int) (roleIds []in
 	}
 	return data.RoleIds, nil
 }
-
 
 func (this *evApi) StoreFirst(ctx context.Context, dest interface{}, sql string, args ...interface{}) (err error) {
 	data := &vo.SelectRes{}

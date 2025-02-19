@@ -15,7 +15,7 @@ import (
 
 type EvApiAdapter struct {
 	ConnId int
-	UserId   int
+	UserId int
 }
 
 func NewEvWrapApi(connId int, userId int) *EvApiAdapter {
@@ -27,13 +27,18 @@ func (this *EvApiAdapter) StoreExec(ctx context.Context, sql string, args ...int
 	return GetEvApi().StoreExec(ctx, sql, args...)
 }
 
+// 长连接广播消息（给每个订阅该频道的用户都发）
+func (this *EvApiAdapter) LiveBroadcast(ctx context.Context, channel string, data interface{}) (err error) {
+	return GetEvApi().LiveBroadcast(ctx, channel, data)
+}
+
 // 查询索引 dist参数必须是一个切片
 func (this *EvApiAdapter) StoreSelect(ctx context.Context, dest interface{}, sql string, args ...interface{}) (err error) {
 	return GetEvApi().StoreSelect(ctx, dest, sql, args...)
 }
 
 // 查询索引 dist参数必须是一个切片
-func (this *EvApiAdapter) GetRoles4UserID(ctx context.Context, userId int) (roleIds []int,err error) {
+func (this *EvApiAdapter) GetRoles4UserID(ctx context.Context, userId int) (roleIds []int, err error) {
 	return GetEvApi().GetRoles4UserID(ctx, userId)
 }
 
