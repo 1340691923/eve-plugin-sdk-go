@@ -60,6 +60,10 @@ func buildBackend(cfg BuildConfig) error {
 
 	ldFlags := fmt.Sprintf("-w -s%s%s ", " ", `-extldflags "-static"`)
 
+	if cfg.OS == "windows"{
+		ldFlags = "-H windowsgui -w -s"
+	}
+
 	outputPath := cfg.OutputPath
 
 	args := []string{
@@ -73,7 +77,6 @@ func buildBackend(cfg BuildConfig) error {
 	args = append(args, rootPackage)
 
 	cfg.Env["GOOS"] = cfg.OS
-	cfg.Env["CGO_ENABLED"] = "0"
 	cfg.Env["GOARCH"] = cfg.GOARCH
 	return RunGoBuild(cfg.Env, args...)
 }
@@ -114,7 +117,6 @@ func (this *Build) DarwinArm64() error {
 	return buildBackend(newBuildConfig("darwin", "arm64",
 		this.EvVersion, this.MainGoFile, this.PluginAlias))
 }
-
 
 func resetEnv() {
 	env := map[string]string{}

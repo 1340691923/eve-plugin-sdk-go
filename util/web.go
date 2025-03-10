@@ -1,16 +1,13 @@
 package util
 
 import (
+	"github.com/1340691923/eve-plugin-sdk-go/enum"
 	"github.com/gin-gonic/gin"
 	"strconv"
 )
 
-const (
-	EvUserID = "Ev-UserID"
-)
-
 func GetEvUserID(ctx *gin.Context) int {
-	userId, err := strconv.Atoi(ctx.GetHeader(EvUserID))
+	userId, err := strconv.Atoi(ctx.GetHeader(enum.EvUserID))
 	if err != nil {
 		return 0
 	}

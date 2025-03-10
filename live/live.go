@@ -7,27 +7,24 @@ import (
 	"github.com/goccy/go-json"
 )
 
-type LiveChannel interface {
-	Pub2Channel(ctx context.Context, req []byte) (res map[string]interface{}, err error)
+type LiveHandle interface {
+	Pub2Channel(ctx context.Context, channel string, req []byte) (res map[string]interface{}, err error)
 }
 
 type Live struct {
-	registerChannelMap map[string]LiveChannel
+	liveHandle LiveHandle
 }
 
-func NewLive(registerChannelMap map[string]LiveChannel) *Live {
-	return &Live{registerChannelMap: registerChannelMap}
+func NewLive(liveHandle LiveHandle) *Live {
+	return &Live{liveHandle: liveHandle}
 }
 
-func (live *Live) Pub2Channel(ctx context.Context, req *backend.Pub2ChannelRequest) (*backend.Pub2ChannelResponse, error) {
-	if len(live.registerChannelMap) == 0 {
-		return &backend.Pub2ChannelResponse{Status: backend.PubStatusError}, errors.New("注册频道数为0")
+func (this *Live) Pub2Channel(ctx context.Context, req *backend.Pub2ChannelRequest) (*backend.Pub2ChannelResponse, error) {
+	if this.liveHandle == nil {
+		return &backend.Pub2ChannelResponse{Status: backend.PubStatusError}, errors.New("该插件没有实现长连接处理器")
 	}
-	if _, ok := live.registerChannelMap[req.Channel]; !ok {
-		return &backend.Pub2ChannelResponse{Status: backend.PubStatusError}, errors.New("没有找到该频道")
-	}
-	duck := live.registerChannelMap[req.Channel]
-	res, err := duck.Pub2Channel(ctx, req.Data)
+
+	res, err := this.liveHandle.Pub2Channel(ctx, req.Channel, req.Data)
 	if err != nil {
 		return &backend.Pub2ChannelResponse{Status: backend.PubStatusError}, err
 	}

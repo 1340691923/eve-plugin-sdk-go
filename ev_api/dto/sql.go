@@ -11,3 +11,13 @@ type SelectReq struct {
 	Sql      string        `json:"sql"`
 	Args     []interface{} `json:"args"`
 }
+
+type ExecMoreReq struct {
+	PluginId string    `json:"plugin_id"`
+	Sqls     []ExecSql `json:"sqls"`
+}
+
+type ExecSql struct {
+	Sql  string        `json:"sql"`
+	Args []interface{} `json:"args"`
+}

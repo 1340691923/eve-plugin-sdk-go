@@ -63,7 +63,7 @@ type ClientInterface interface {
 	//mysql数据源接口
 
 	MysqlExecSql(ctx context.Context, dbName, sql string, args ...interface{}) (rowsAffected int64, err error)
-	MysqlSelectSql(ctx context.Context, dbName, sql string, args ...interface{}) (list []map[string]interface{}, err error)
+	MysqlSelectSql(ctx context.Context, dbName, sql string, args ...interface{}) (columns []string, list []map[string]interface{}, err error)
 	MysqlFirstSql(ctx context.Context, dbName, sql string, args ...interface{}) (data map[string]interface{}, err error)
 
 	//redis数据源接口

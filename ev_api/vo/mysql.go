@@ -5,7 +5,8 @@ type MysqlExecSqlRes struct {
 }
 
 type MysqlSelectSqlRes struct {
-	Result []map[string]interface{} `json:"result"`
+	Result  []map[string]interface{} `json:"result"`
+	Columns []string                 `json:"columns"`
 }
 
 type MysqlFirstSqlRes struct {

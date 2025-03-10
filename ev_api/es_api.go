@@ -27,9 +27,18 @@ func (this *EvApiAdapter) StoreExec(ctx context.Context, sql string, args ...int
 	return GetEvApi().StoreExec(ctx, sql, args...)
 }
 
+// 批量執行sql 有事务
+func (this *EvApiAdapter) StoreMoreExec(ctx context.Context, sqls []dto.ExecSql) (err error) {
+	return GetEvApi().StoreMoreExec(ctx, sqls)
+}
+
 // 长连接广播消息（给每个订阅该频道的用户都发）
-func (this *EvApiAdapter) LiveBroadcast(ctx context.Context, channel string, data interface{}) (err error) {
+func (this *EvApiAdapter) LiveBroadcast(ctx context.Context, channel string, data interface{}) (isNoSub bool,err error) {
 	return GetEvApi().LiveBroadcast(ctx, channel, data)
+}
+
+func (this *EvApiAdapter) BatchLiveBroadcast(ctx context.Context, channel string, datas ...interface{}) (noSub bool,err error){
+	return GetEvApi().BatchLiveBroadcast(ctx, channel, datas)
 }
 
 // 查询索引 dist参数必须是一个切片
@@ -86,7 +95,7 @@ func (this *EvApiAdapter) MysqlExecSql(ctx context.Context, dbName, sql string, 
 	})
 }
 
-func (this *EvApiAdapter) MysqlSelectSql(ctx context.Context, dbName, sql string, args ...interface{}) (res []map[string]interface{}, err error) {
+func (this *EvApiAdapter) MysqlSelectSql(ctx context.Context, dbName, sql string, args ...interface{}) (columns []string, res []map[string]interface{}, err error) {
 	return GetEvApi().MysqlSelectSql(ctx, &dto.MysqlSelectReq{
 		EsConnectData: this.buildEsConnectData(),
 		DbName:        dbName,

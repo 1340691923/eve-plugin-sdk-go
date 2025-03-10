@@ -3,7 +3,7 @@ package ev_api
 import (
 	"context"
 	"encoding/json"
-	"errors"
+	"github.com/pkg/errors"
 	"fmt"
 	"github.com/1340691923/eve-plugin-sdk-go/backend/logger"
 	"github.com/1340691923/eve-plugin-sdk-go/ev_api/bson"
@@ -38,8 +38,8 @@ func init() {
 
 func SetEvApi(rpcPort, pluginId string, debug bool) *evApi {
 	client := &fasthttp.Client{
-		ReadTimeout:  120 * time.Second,
-		WriteTimeout: 120 * time.Second,
+		ReadTimeout:  300 * time.Second,
+		WriteTimeout: 300 * time.Second,
 	}
 	once.Do(func() {
 		evApiObj = &evApi{
@@ -449,16 +449,47 @@ func (this *evApi) StoreExec(ctx context.Context, sql string, args ...interface{
 	return data.RowsAffected, nil
 }
 
-func (this *evApi) LiveBroadcast(ctx context.Context, channel string, data interface{}) (err error) {
+// 执行sql
+func (this *evApi) StoreMoreExec(ctx context.Context, sqls []dto.ExecSql) (err error) {
+	err = this.request(ctx, "api/plugin_util/ExecMoreSql", &dto.ExecMoreReq{PluginId: this.pluginId, Sqls: sqls}, &vo.ApiCommonRes{})
+	if err != nil {
+		return errors.WithStack(err)
+	}
+	return nil
+}
+
+func (this *evApi) LiveBroadcast(ctx context.Context, channel string, data interface{}) (noSub bool,err error) {
 
 	err = this.request(ctx, "api/plugin_util/LiveBroadcast", map[string]interface{}{
 		"channel": this.pluginId + "$v$" + channel,
 		"data":    data,
 	}, &vo.ApiCommonRes{})
 	if err != nil {
-		return err
+		if err.Error() == NoSubscriberErr.Error(){
+			return true,nil
+		}
+		return false,errors.WithStack(err)
 	}
-	return nil
+	return false,nil
+}
+
+func (this *evApi) BatchLiveBroadcast(ctx context.Context, channel string, datas ...interface{}) (noSub bool,err error) {
+
+	channel = this.pluginId + "$v$" + channel
+	list := []interface{}{}
+
+	for _, data := range datas {
+		list = append(list, data)
+	}
+
+	err = this.request(ctx, "api/plugin_util/BatchLiveBroadcast", &dto.BatchLiveBroadcast{List: list}, &vo.ApiCommonRes{})
+	if err != nil {
+		if err.Error() == NoSubscriberErr.Error(){
+			return true,nil
+		}
+		return false,errors.WithStack(err)
+	}
+	return false,nil
 }
 
 // 查询索引 dist参数必须是一个切片
@@ -467,7 +498,7 @@ func (this *evApi) StoreSelect(ctx context.Context, dest interface{}, sql string
 	data.Result = &dest
 	err = this.request(ctx, "api/plugin_util/SelectSql", &dto.SelectReq{Sql: sql, PluginId: this.pluginId, Args: args}, &vo.ApiCommonRes{Data: data}, true)
 	if err != nil {
-		return err
+		return errors.WithStack(err)
 	}
 
 	return nil
@@ -489,7 +520,7 @@ func (this *evApi) StoreFirst(ctx context.Context, dest interface{}, sql string,
 	data.Result = &dest
 	err = this.request(ctx, "api/plugin_util/FirstSql", &dto.SelectReq{Sql: sql, PluginId: this.pluginId, Args: args}, &vo.ApiCommonRes{Data: data}, true)
 	if err != nil {
-		return err
+		return errors.WithStack(err)
 	}
 	return nil
 }
@@ -497,7 +528,7 @@ func (this *evApi) StoreFirst(ctx context.Context, dest interface{}, sql string,
 func (this *evApi) LoadDebugPlugin(ctx context.Context, req *dto.LoadDebugPlugin) (err error) {
 	err = this.request(ctx, "api/plugin_util/LoadDebugPlugin", req, &vo.ApiCommonRes{})
 	if err != nil {
-		return err
+		return errors.WithStack(err)
 	}
 	return nil
 }
@@ -505,7 +536,7 @@ func (this *evApi) LoadDebugPlugin(ctx context.Context, req *dto.LoadDebugPlugin
 func (this *evApi) StopDebugPlugin(ctx context.Context, req *dto.StopDebugPlugin) (err error) {
 	err = this.request(ctx, "api/plugin_util/LoadDebugPlugin", req, &vo.ApiCommonRes{})
 	if err != nil {
-		return err
+		return errors.WithStack(err)
 	}
 	return nil
 }
@@ -531,13 +562,13 @@ func (this *evApi) MysqlExecSql(ctx context.Context, req *dto.MysqlExecReq) (row
 }
 
 // 查询索引 dist参数必须是一个切片
-func (this *evApi) MysqlSelectSql(ctx context.Context, req *dto.MysqlSelectReq) (result []map[string]interface{}, err error) {
+func (this *evApi) MysqlSelectSql(ctx context.Context, req *dto.MysqlSelectReq) (columns []string, result []map[string]interface{}, err error) {
 	data := &vo.MysqlSelectSqlRes{}
 	err = this.request(ctx, "api/plugin_util/MysqlSelectSql", req, &vo.ApiCommonRes{Data: data}, true)
 	if err != nil {
-		return nil, err
+		return nil, nil,errors.WithStack(err)
 	}
-	return data.Result, nil
+	return data.Columns, data.Result, nil
 }
 
 func (this *evApi) MysqlFirstSql(ctx context.Context, req *dto.MysqlSelectReq) (result map[string]interface{}, err error) {
@@ -575,7 +606,7 @@ func (this *evApi) ExecMongoCommand(ctx context.Context, req *dto.MongoExecReq) 
 
 	res, err := this.requestProtobuf(ctx, "api/plugin_util/MongoExecCommand", req)
 	if err != nil {
-		return nil, err
+		return nil,errors.WithStack(err)
 	}
 	if res.StatusErr() != nil {
 		return nil, res.StatusErr()
@@ -586,7 +617,7 @@ func (this *evApi) ExecMongoCommand(ctx context.Context, req *dto.MongoExecReq) 
 	err = json2.Unmarshal(res.ResByte(), &data)
 
 	if err != nil {
-		return nil, err
+		return nil,errors.WithStack(err)
 	}
 
 	return data, nil
@@ -596,7 +627,7 @@ func (this *evApi) ShowMongoDbs(ctx context.Context, req *dto.ShowMongoDbsReq) (
 	res := &vo.ApiCommonRes{Data: dbList}
 	err = this.request(ctx, "api/plugin_util/ShowMongoDbs", req, res)
 	if err != nil {
-		return nil, err
+		return nil,errors.WithStack(err)
 	}
 
 	return cast.ToStringSlice(res.Data), nil
@@ -611,9 +642,8 @@ func (this *evApi) request(ctx context.Context, api API, requestData interface{}
 	t1 := time.Now()
 	res, err := this.SendRequest(ctx, api, requestDataJSON)
 	if err != nil {
-		return err
+		return errors.WithStack(err)
 	}
-
 	if this.debug {
 		logger.DefaultLogger.Info("debug network",
 			"api", api,
@@ -627,7 +657,7 @@ func (this *evApi) request(ctx context.Context, api API, requestData interface{}
 	}
 
 	if err != nil {
-		return err
+		return errors.WithStack(err)
 	}
 
 	switch result.(type) {
@@ -643,14 +673,13 @@ func (this *evApi) requestProtobuf(ctx context.Context, api API, requestData int
 	requestDataJSON, err := json2.Marshal(requestData)
 
 	if err != nil {
-		log.Println("err", err)
-		return nil, err
+		return nil,errors.WithStack(err)
 	}
 
 	t1 := time.Now()
 	res, err := this.SendRequest(ctx, api, requestDataJSON)
 	if err != nil {
-		return nil, err
+		return nil,errors.WithStack(err)
 	}
 
 	if this.debug {
@@ -665,7 +694,7 @@ func (this *evApi) requestProtobuf(ctx context.Context, api API, requestData int
 	err = protobuf.Unmarshal(res, p)
 
 	if err != nil {
-		return nil, err
+		return nil,errors.WithStack(err)
 	}
 
 	headers := map[string][]string{}
@@ -724,10 +753,10 @@ func (this *evApi) SendRequest(ctx context.Context, api API, requestDataJSON []b
 
 	select {
 	case <-ctx.Done(): // 如果 context 超时或取消
-		return nil, ctx.Err()
+		return nil, errors.WithStack(ctx.Err())
 	case err := <-errCh: // 请求完成
 		if err != nil {
-			return nil, fmt.Errorf("request failed: %w", err)
+			return nil, errors.Errorf("request failed: %w", err)
 		}
 	}
 

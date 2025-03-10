@@ -9,6 +9,7 @@ import (
 	"github.com/1340691923/eve-plugin-sdk-go/build"
 	"github.com/1340691923/eve-plugin-sdk-go/call_resource"
 	"github.com/1340691923/eve-plugin-sdk-go/check_health"
+	"github.com/1340691923/eve-plugin-sdk-go/enum"
 	"log"
 	"os"
 )
@@ -41,16 +42,11 @@ var (
 	DbType           string
 )
 
-const (
-	MysqlDbTyp  = "mysql"
-	SqliteDbTyp = "sqlite3"
-)
-
 func init() {
 	flag.StringVar(&TmpFileStorePath, "tmpFileStorePath", "store_file_dir", "临时文件存放目录")
 	flag.StringVar(&EvRpcPort, "evRpcPort", "8091", "ev基座内网访问端口")
 	flag.BoolVar(&Debug, "debug", false, "是否开启调试")
-	flag.StringVar(&DbType, "dbType", SqliteDbTyp, "存储类型")
+	flag.StringVar(&DbType, "dbType", enum.SqliteDbTyp, "存储类型")
 }
 
 func Serve(opts ServeOpts) {
