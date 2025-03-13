@@ -26,6 +26,8 @@ type ServeOpts struct {
 
 	Debug bool
 
+	ReadyCallback func()
+
 	ExitCallback func()
 }
 
@@ -89,6 +91,14 @@ func Serve(opts ServeOpts) {
 			if err != nil {
 				panic(fmt.Sprintf("链接ev基座异常:%s", err.Error()))
 			} else {
+				if opts.ReadyCallback != nil {
+					go func() {
+						if r := recover(); r != nil {
+							log.Println("ReadyCallback 发生 panic:", r)
+						}
+						opts.ReadyCallback()
+					}()
+				}
 				log.Println(fmt.Sprintf("正常链接ev基座"))
 			}
 		}
@@ -97,6 +107,14 @@ func Serve(opts ServeOpts) {
 		})
 	} else {
 		go func() {
+			if opts.ReadyCallback != nil {
+				go func() {
+					if r := recover(); r != nil {
+						log.Println("ReadyCallback 发生 panic:", r)
+					}
+					opts.ReadyCallback()
+				}()
+			}
 			plugin.Serve(&plugin.ServeConfig{
 				HandshakeConfig:  handshake,
 				VersionedPlugins: versionedPlugins,

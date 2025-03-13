@@ -3,7 +3,6 @@ package ev_api
 import (
 	"context"
 	"encoding/json"
-	"github.com/pkg/errors"
 	"fmt"
 	"github.com/1340691923/eve-plugin-sdk-go/backend/logger"
 	"github.com/1340691923/eve-plugin-sdk-go/ev_api/bson"
@@ -12,10 +11,10 @@ import (
 	"github.com/1340691923/eve-plugin-sdk-go/ev_api/vo"
 	"github.com/1340691923/eve-plugin-sdk-go/genproto/pluginv2"
 	json2 "github.com/goccy/go-json"
+	"github.com/pkg/errors"
 	"github.com/spf13/cast"
 	"github.com/valyala/fasthttp"
 	protobuf "google.golang.org/protobuf/proto"
-	"log"
 	"sync"
 	"time"
 )
@@ -458,22 +457,59 @@ func (this *evApi) StoreMoreExec(ctx context.Context, sqls []dto.ExecSql) (err e
 	return nil
 }
 
-func (this *evApi) LiveBroadcast(ctx context.Context, channel string, data interface{}) (noSub bool,err error) {
+func (this *evApi) StoreSave(ctx context.Context, table string, data interface{}) (err error) {
+	err = this.request(ctx, "api/plugin_util/SaveDb", &dto.SaveDb{PluginId: this.pluginId, TableName: table, Data: data}, &vo.ApiCommonRes{})
+	if err != nil {
+		return errors.WithStack(err)
+	}
+	return nil
+}
+
+func (this *evApi) StoreUpdate(ctx context.Context, table string, updateData map[string]interface{}, whereSql string, whereArgs ...interface{}) (rowsAffected int64, err error) {
+	data := &vo.ExecSqlRes{}
+	err = this.request(ctx, "api/plugin_util/UpdateDb",
+		&dto.UpdateDb{PluginId: this.pluginId, TableName: table, Data: updateData, UpdateArgs: whereArgs, UpdateSql: whereSql}, &vo.ApiCommonRes{Data: data})
+	if err != nil {
+		return 0, err
+	}
+	return data.RowsAffected, nil
+}
+
+func (this *evApi) StoreDelete(ctx context.Context, tableName, whereSql string, whereArgs ...interface{}) (rowsAffected int64, err error) {
+	data := &vo.ExecSqlRes{}
+	err = this.request(ctx, "api/plugin_util/DeleteDb",
+		&dto.DeleteDb{PluginId: this.pluginId, TableName: tableName, WhereArgs: whereArgs, WhereSql: whereSql}, &vo.ApiCommonRes{Data: data})
+	if err != nil {
+		return 0, err
+	}
+	return data.RowsAffected, nil
+}
+
+func (this *evApi) StoreInsertOrUpdate(ctx context.Context, table string, upsertData map[string]interface{}, uniqueKeys ...string) (err error) {
+	err = this.request(ctx, "api/plugin_util/InsertOrUpdateDb",
+		&dto.InsertOrUpdateDb{PluginId: this.pluginId, TableName: table, UpsertData: upsertData, UniqueKeys: uniqueKeys}, &vo.ApiCommonRes{})
+	if err != nil {
+		return errors.WithStack(err)
+	}
+	return nil
+}
+
+func (this *evApi) LiveBroadcast(ctx context.Context, channel string, data interface{}) (noSub bool, err error) {
 
 	err = this.request(ctx, "api/plugin_util/LiveBroadcast", map[string]interface{}{
 		"channel": this.pluginId + "$v$" + channel,
 		"data":    data,
 	}, &vo.ApiCommonRes{})
 	if err != nil {
-		if err.Error() == NoSubscriberErr.Error(){
-			return true,nil
+		if err.Error() == NoSubscriberErr.Error() {
+			return true, nil
 		}
-		return false,errors.WithStack(err)
+		return false, errors.WithStack(err)
 	}
-	return false,nil
+	return false, nil
 }
 
-func (this *evApi) BatchLiveBroadcast(ctx context.Context, channel string, datas ...interface{}) (noSub bool,err error) {
+func (this *evApi) BatchLiveBroadcast(ctx context.Context, channel string, datas ...interface{}) (noSub bool, err error) {
 
 	channel = this.pluginId + "$v$" + channel
 	list := []interface{}{}
@@ -484,12 +520,23 @@ func (this *evApi) BatchLiveBroadcast(ctx context.Context, channel string, datas
 
 	err = this.request(ctx, "api/plugin_util/BatchLiveBroadcast", &dto.BatchLiveBroadcast{List: list}, &vo.ApiCommonRes{})
 	if err != nil {
-		if err.Error() == NoSubscriberErr.Error(){
-			return true,nil
+		if err.Error() == NoSubscriberErr.Error() {
+			return true, nil
 		}
-		return false,errors.WithStack(err)
+		return false, errors.WithStack(err)
 	}
-	return false,nil
+	return false, nil
+}
+
+func (this *evApi) GetEveToken(ctx context.Context) (token string, err error) {
+
+	res := &vo.ApiCommonRes{Data: ""}
+	err = this.request(ctx, "api/plugin_util/GetEveToken", map[string]interface{}{}, res)
+	if err != nil {
+		return "", errors.WithStack(err)
+	}
+
+	return cast.ToString(res.Data), nil
 }
 
 // 查询索引 dist参数必须是一个切片
@@ -566,7 +613,7 @@ func (this *evApi) MysqlSelectSql(ctx context.Context, req *dto.MysqlSelectReq) 
 	data := &vo.MysqlSelectSqlRes{}
 	err = this.request(ctx, "api/plugin_util/MysqlSelectSql", req, &vo.ApiCommonRes{Data: data}, true)
 	if err != nil {
-		return nil, nil,errors.WithStack(err)
+		return nil, nil, errors.WithStack(err)
 	}
 	return data.Columns, data.Result, nil
 }
@@ -606,7 +653,7 @@ func (this *evApi) ExecMongoCommand(ctx context.Context, req *dto.MongoExecReq) 
 
 	res, err := this.requestProtobuf(ctx, "api/plugin_util/MongoExecCommand", req)
 	if err != nil {
-		return nil,errors.WithStack(err)
+		return nil, errors.WithStack(err)
 	}
 	if res.StatusErr() != nil {
 		return nil, res.StatusErr()
@@ -617,7 +664,7 @@ func (this *evApi) ExecMongoCommand(ctx context.Context, req *dto.MongoExecReq) 
 	err = json2.Unmarshal(res.ResByte(), &data)
 
 	if err != nil {
-		return nil,errors.WithStack(err)
+		return nil, errors.WithStack(err)
 	}
 
 	return data, nil
@@ -627,7 +674,7 @@ func (this *evApi) ShowMongoDbs(ctx context.Context, req *dto.ShowMongoDbsReq) (
 	res := &vo.ApiCommonRes{Data: dbList}
 	err = this.request(ctx, "api/plugin_util/ShowMongoDbs", req, res)
 	if err != nil {
-		return nil,errors.WithStack(err)
+		return nil, errors.WithStack(err)
 	}
 
 	return cast.ToStringSlice(res.Data), nil
@@ -640,7 +687,7 @@ func (this *evApi) request(ctx context.Context, api API, requestData interface{}
 	}
 
 	t1 := time.Now()
-	res, err := this.SendRequest(ctx, api, requestDataJSON)
+	res, err := this.SendRequest(ctx, api, fasthttp.MethodPost, requestDataJSON)
 	if err != nil {
 		return errors.WithStack(err)
 	}
@@ -673,13 +720,13 @@ func (this *evApi) requestProtobuf(ctx context.Context, api API, requestData int
 	requestDataJSON, err := json2.Marshal(requestData)
 
 	if err != nil {
-		return nil,errors.WithStack(err)
+		return nil, errors.WithStack(err)
 	}
 
 	t1 := time.Now()
-	res, err := this.SendRequest(ctx, api, requestDataJSON)
+	res, err := this.SendRequest(ctx, api, fasthttp.MethodPost, requestDataJSON)
 	if err != nil {
-		return nil,errors.WithStack(err)
+		return nil, errors.WithStack(err)
 	}
 
 	if this.debug {
@@ -694,7 +741,7 @@ func (this *evApi) requestProtobuf(ctx context.Context, api API, requestData int
 	err = protobuf.Unmarshal(res, p)
 
 	if err != nil {
-		return nil,errors.WithStack(err)
+		return nil, errors.WithStack(err)
 	}
 
 	headers := map[string][]string{}
@@ -718,7 +765,7 @@ func (this *evApi) requestProtobuf(ctx context.Context, api API, requestData int
 	return result, err
 }
 
-func (this *evApi) SendRequest(ctx context.Context, api API, requestDataJSON []byte) ([]byte, error) {
+func (this *evApi) SendRequest(ctx context.Context, api API, method string, requestDataJSON []byte) ([]byte, error) {
 	// 构建请求对象
 	req := fasthttp.AcquireRequest()
 	defer fasthttp.ReleaseRequest(req) // 释放请求对象，防止内存泄漏
@@ -731,7 +778,7 @@ func (this *evApi) SendRequest(ctx context.Context, api API, requestDataJSON []b
 	req.SetRequestURI(url)
 
 	// 设置请求方法为 POST
-	req.Header.SetMethod(fasthttp.MethodPost)
+	req.Header.SetMethod(method)
 	req.Header.Set("Content-Type", "application/json")
 	// 设置自定义头
 	req.Header.Set("X-Plugin-ID", this.pluginId)
@@ -746,9 +793,7 @@ func (this *evApi) SendRequest(ctx context.Context, api API, requestDataJSON []b
 
 	// 启动异步请求
 	go func() {
-		t := time.Now()
 		errCh <- this.client.Do(req, resp)
-		log.Println("client.do", time.Now().Sub(t).String())
 	}()
 
 	select {

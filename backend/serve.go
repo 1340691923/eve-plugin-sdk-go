@@ -45,6 +45,8 @@ type ServeOpts struct {
 	EvRpcPort string
 
 	ExitCallback func()
+
+	ReadyCallback func()
 }
 
 type DefaultPluginInfoHandler struct {
@@ -117,6 +119,8 @@ func Serve(opts ServeOpts) {
 		return grpc.NewServer(opts...)
 	}
 	pluginOpts.ExitCallback = opts.ExitCallback
+	pluginOpts.ReadyCallback = opts.ReadyCallback
+
 	pluginOpts.PluginID = opts.pluginID
 	pluginOpts.PluginJson = pluginJson
 	grpcplugin.Serve(pluginOpts)

@@ -14,22 +14,25 @@ import (
 	"os"
 )
 
-type ServeOpts struct {
+var PluginJson *build.PluginJsonData
+
+type Assets struct {
 	PluginJsonBytes []byte
+	FrontendFiles   embed.FS
+}
 
-	pluginJson *build.PluginJsonData
+type ServeOpts struct {
+	RegisterRoutes func(engine *web_engine.WebEngine)
 
-	WebEngine *web_engine.WebEngine
-
-	FrontendFiles embed.FS
+	Assets *Assets
 
 	LiveHandler backend.LiveHandler
 
 	GRPCSettings backend.GRPCSettings
 
-	evRpcPort string
-
 	Migration *build.Gormigrate
+
+	ReadyCallBack func()
 
 	ExitCallback func()
 }
@@ -51,33 +54,48 @@ func init() {
 
 func Serve(opts ServeOpts) {
 
-	opts.evRpcPort = EvRpcPort
+	evRpcPort := EvRpcPort
+	pluginJson := new(build.PluginJsonData)
+	if opts.Assets == nil {
+		panic("静态资源不能为空")
+	}
 
-	if len(opts.PluginJsonBytes) > 0 && opts.pluginJson == nil {
-		opts.pluginJson = new(build.PluginJsonData)
-		err := json.Unmarshal(opts.PluginJsonBytes, &opts.pluginJson)
+	if opts.Assets.PluginJsonBytes == nil {
+		panic("插件配置资源不能为空")
+	}
+
+	if len(opts.Assets.PluginJsonBytes) > 0 {
+		err := json.Unmarshal(opts.Assets.PluginJsonBytes, &pluginJson)
 		if err != nil {
 			log.Println("plugin.json解析失败")
 			panic(err)
 		}
+		PluginJson = pluginJson
 	}
-	if opts.pluginJson != nil {
-		opts.pluginJson.BackendDebug = Debug
+	if pluginJson != nil {
+		pluginJson.BackendDebug = Debug
 	}
 	if opts.Migration == nil {
 		opts.Migration = new(build.Gormigrate)
 	}
 
-	PluginAlias = opts.pluginJson.PluginAlias
+	PluginAlias = pluginJson.PluginAlias
+
+	webEngine := web_engine.NewWebEngine()
+
+	if opts.RegisterRoutes != nil {
+		opts.RegisterRoutes(webEngine)
+	}
 
 	backend.Serve(backend.ServeOpts{
-		PluginJson:          opts.pluginJson,
-		CallResourceHandler: call_resource.NewResourceHandler(opts.WebEngine, opts.FrontendFiles),
-		CheckHealthHandler:  check_health.NewCheckHealthSvr(opts.pluginJson, opts.Migration, opts.WebEngine),
+		PluginJson:          pluginJson,
+		CallResourceHandler: call_resource.NewResourceHandler(webEngine, opts.Assets.FrontendFiles),
+		CheckHealthHandler:  check_health.NewCheckHealthSvr(pluginJson, opts.Migration, webEngine),
 		GRPCSettings:        opts.GRPCSettings,
 		LiveHandler:         opts.LiveHandler,
-		EvRpcPort:           opts.evRpcPort,
+		EvRpcPort:           evRpcPort,
 		ExitCallback:        opts.ExitCallback,
+		ReadyCallback:       opts.ReadyCallBack,
 	})
 
 }
