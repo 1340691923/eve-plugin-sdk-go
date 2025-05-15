@@ -1,16 +1,30 @@
+// backend包提供插件后端的核心功能
 package backend
 
+// 导入所需的包
 import (
+	// Protobuf生成的包
 	"github.com/1340691923/eve-plugin-sdk-go/genproto/pluginv2"
+	// 时间包
 	"time"
 )
 
+// ConvertToProtobuf 提供将SDK数据类型转换为Protobuf类型的功能
 type ConvertToProtobuf struct{}
 
+// ToProto 创建新的Protobuf转换器
+// 返回：
+//   - ConvertToProtobuf: Protobuf转换器实例
 func ToProto() ConvertToProtobuf {
 	return ConvertToProtobuf{}
 }
 
+// User 将用户对象转换为Protobuf用户对象
+// 参数：
+//   - user: 用户对象
+//
+// 返回：
+//   - *pluginv2.User: Protobuf用户对象
 func (t ConvertToProtobuf) User(user *User) *pluginv2.User {
 	if user == nil {
 		return nil
@@ -24,6 +38,12 @@ func (t ConvertToProtobuf) User(user *User) *pluginv2.User {
 	}
 }
 
+// AppInstanceSettings 将应用实例设置转换为Protobuf格式
+// 参数：
+//   - s: 应用实例设置
+//
+// 返回：
+//   - *pluginv2.AppInstanceSettings: Protobuf应用实例设置
 func (t ConvertToProtobuf) AppInstanceSettings(s *AppInstanceSettings) *pluginv2.AppInstanceSettings {
 	if s == nil {
 		return nil
@@ -36,6 +56,12 @@ func (t ConvertToProtobuf) AppInstanceSettings(s *AppInstanceSettings) *pluginv2
 	}
 }
 
+// DataSourceInstanceSettings 将数据源实例设置转换为Protobuf格式
+// 参数：
+//   - s: 数据源实例设置
+//
+// 返回：
+//   - *pluginv2.DataSourceInstanceSettings: Protobuf数据源实例设置
 func (t ConvertToProtobuf) DataSourceInstanceSettings(s *DataSourceInstanceSettings) *pluginv2.DataSourceInstanceSettings {
 	if s == nil {
 		return nil
@@ -56,6 +82,12 @@ func (t ConvertToProtobuf) DataSourceInstanceSettings(s *DataSourceInstanceSetti
 	}
 }
 
+// PluginContext 将插件上下文转换为Protobuf格式
+// 参数：
+//   - pluginCtx: 插件上下文
+//
+// 返回：
+//   - *pluginv2.PluginContext: Protobuf插件上下文
 func (t ConvertToProtobuf) PluginContext(pluginCtx PluginContext) *pluginv2.PluginContext {
 	return &pluginv2.PluginContext{
 		OrgId:                      pluginCtx.OrgID,
@@ -66,6 +98,12 @@ func (t ConvertToProtobuf) PluginContext(pluginCtx PluginContext) *pluginv2.Plug
 	}
 }
 
+// CallResourceResponse 将资源调用响应转换为Protobuf格式
+// 参数：
+//   - resp: 资源调用响应
+//
+// 返回：
+//   - *pluginv2.CallResourceResponse: Protobuf资源调用响应
 func (t ConvertToProtobuf) CallResourceResponse(resp *CallResourceResponse) *pluginv2.CallResourceResponse {
 	headers := map[string]*pluginv2.StringList{}
 
@@ -80,6 +118,12 @@ func (t ConvertToProtobuf) CallResourceResponse(resp *CallResourceResponse) *plu
 	}
 }
 
+// CallResourceRequest 将资源调用请求转换为Protobuf格式
+// 参数：
+//   - req: 资源调用请求
+//
+// 返回：
+//   - *pluginv2.CallResourceRequest: Protobuf资源调用请求
 func (t ConvertToProtobuf) CallResourceRequest(req *CallResourceRequest) *pluginv2.CallResourceRequest {
 	protoReq := &pluginv2.CallResourceRequest{
 		PluginContext: t.PluginContext(req.PluginContext),
@@ -98,6 +142,12 @@ func (t ConvertToProtobuf) CallResourceRequest(req *CallResourceRequest) *plugin
 	return protoReq
 }
 
+// PluginInfoGetRes 将插件信息响应转换为Protobuf格式
+// 参数：
+//   - protoResp: 插件信息响应
+//
+// 返回：
+//   - *pluginv2.PluginInfoGetRes: Protobuf插件信息响应
 func (f ConvertToProtobuf) PluginInfoGetRes(protoResp *PluginInfoGetRes) *pluginv2.PluginInfoGetRes {
 
 	return &pluginv2.PluginInfoGetRes{
@@ -106,6 +156,12 @@ func (f ConvertToProtobuf) PluginInfoGetRes(protoResp *PluginInfoGetRes) *plugin
 	}
 }
 
+// CheckHealthResponse 将健康检查结果转换为Protobuf格式
+// 参数：
+//   - res: 健康检查结果
+//
+// 返回：
+//   - *pluginv2.CheckHealthResponse: Protobuf健康检查响应
 func (t ConvertToProtobuf) CheckHealthResponse(res *CheckHealthResult) *pluginv2.CheckHealthResponse {
 	return &pluginv2.CheckHealthResponse{
 		Status:      t.HealthStatus(res.Status),
@@ -114,6 +170,12 @@ func (t ConvertToProtobuf) CheckHealthResponse(res *CheckHealthResult) *pluginv2
 	}
 }
 
+// HealthStatus 将健康状态转换为Protobuf健康状态
+// 参数：
+//   - status: 健康状态
+//
+// 返回：
+//   - pluginv2.CheckHealthResponse_HealthStatus: Protobuf健康状态
 func (t ConvertToProtobuf) HealthStatus(status HealthStatus) pluginv2.CheckHealthResponse_HealthStatus {
 	switch status {
 	case HealthStatusUnknown:
@@ -126,6 +188,12 @@ func (t ConvertToProtobuf) HealthStatus(status HealthStatus) pluginv2.CheckHealt
 	panic("unsupported protobuf health status type in sdk")
 }
 
+// Pub2ChannelResponse 将发布频道响应转换为Protobuf格式
+// 参数：
+//   - res: 发布频道响应
+//
+// 返回：
+//   - *pluginv2.Pub2ChannelResponse: Protobuf发布频道响应
 func (t ConvertToProtobuf) Pub2ChannelResponse(res *Pub2ChannelResponse) *pluginv2.Pub2ChannelResponse {
 	return &pluginv2.Pub2ChannelResponse{
 		Status:      t.PubStatus(res.Status),
@@ -134,6 +202,12 @@ func (t ConvertToProtobuf) Pub2ChannelResponse(res *Pub2ChannelResponse) *plugin
 	}
 }
 
+// PubStatus 将发布状态转换为Protobuf发布状态
+// 参数：
+//   - status: 发布状态
+//
+// 返回：
+//   - pluginv2.Pub2ChannelResponse_PubStatus: Protobuf发布状态
 func (t ConvertToProtobuf) PubStatus(status PubStatus) pluginv2.Pub2ChannelResponse_PubStatus {
 	switch status {
 	case PubStatusUnknown:

@@ -1,68 +1,167 @@
+// ev_api包提供EVE API的接口和实现
 package ev_api
 
+// 导入所需的包
 import (
+	// 上下文包
 	"context"
+	// 日志包
 	"github.com/1340691923/eve-plugin-sdk-go/backend/logger"
+	// MongoDB BSON包
 	"github.com/1340691923/eve-plugin-sdk-go/ev_api/bson"
+	// 数据传输对象包
 	"github.com/1340691923/eve-plugin-sdk-go/ev_api/dto"
+	// Protobuf协议包
 	"github.com/1340691923/eve-plugin-sdk-go/ev_api/proto"
+	// 错误处理包
 	"github.com/pkg/errors"
+	// IO操作包
 	"io/ioutil"
+	// 日志包
 	"log"
+	// HTTP包
 	"net/http"
+	// 时间处理包
 	"time"
 )
 
+// EvApiAdapter ES API适配器结构体
 type EvApiAdapter struct {
+	// 连接ID
 	ConnId int
+	// 用户ID
 	UserId int
 }
 
+// NewEvWrapApi 创建一个新的ES API适配器
+// 参数：
+//   - connId: 连接ID
+//   - userId: 用户ID
+//
+// 返回：
+//   - *EvApiAdapter: ES API适配器实例
 func NewEvWrapApi(connId int, userId int) *EvApiAdapter {
 	return &EvApiAdapter{ConnId: connId, UserId: userId}
 }
 
-// 执行sql
+// StoreExec 执行SQL语句
+// 参数：
+//   - ctx: 上下文
+//   - sql: SQL语句
+//   - args: SQL参数
+//
+// 返回：
+//   - rowsAffected: 影响的行数
+//   - err: 错误信息
 func (this *EvApiAdapter) StoreExec(ctx context.Context, sql string, args ...interface{}) (rowsAffected int64, err error) {
 	return GetEvApi().StoreExec(ctx, sql, args...)
 }
 
-// 批量執行sql 有事务
+// StoreMoreExec 批量执行SQL语句，带事务
+// 参数：
+//   - ctx: 上下文
+//   - sqls: SQL语句列表
+//
+// 返回：
+//   - err: 错误信息
 func (this *EvApiAdapter) StoreMoreExec(ctx context.Context, sqls []dto.ExecSql) (err error) {
 	return GetEvApi().StoreMoreExec(ctx, sqls)
 }
 
-// 长连接广播消息（给每个订阅该频道的用户都发）
-func (this *EvApiAdapter) LiveBroadcast(ctx context.Context, channel string, data interface{}) (isNoSub bool,err error) {
+// LiveBroadcast 通过长连接广播消息（给每个订阅该频道的用户）
+// 参数：
+//   - ctx: 上下文
+//   - channel: 频道名称
+//   - data: 广播数据
+//
+// 返回：
+//   - isNoSub: 是否没有订阅者
+//   - err: 错误信息
+func (this *EvApiAdapter) LiveBroadcast(ctx context.Context, channel string, data interface{}) (isNoSub bool, err error) {
 	return GetEvApi().LiveBroadcast(ctx, channel, data)
 }
 
-func (this *EvApiAdapter) BatchLiveBroadcast(ctx context.Context, channel string, datas ...interface{}) (noSub bool,err error){
+// BatchLiveBroadcast 批量广播消息
+// 参数：
+//   - ctx: 上下文
+//   - channel: 频道名称
+//   - datas: 广播数据列表
+//
+// 返回：
+//   - noSub: 是否没有订阅者
+//   - err: 错误信息
+func (this *EvApiAdapter) BatchLiveBroadcast(ctx context.Context, channel string, datas ...interface{}) (noSub bool, err error) {
 	return GetEvApi().BatchLiveBroadcast(ctx, channel, datas)
 }
 
-// 查询索引 dist参数必须是一个切片
+// StoreSelect 执行查询SQL，结果存入dest切片
+// 参数：
+//   - ctx: 上下文
+//   - dest: 结果接收对象（必须是切片）
+//   - sql: SQL语句
+//   - args: SQL参数
+//
+// 返回：
+//   - err: 错误信息
 func (this *EvApiAdapter) StoreSelect(ctx context.Context, dest interface{}, sql string, args ...interface{}) (err error) {
 	return GetEvApi().StoreSelect(ctx, dest, sql, args...)
 }
 
-// 查询索引 dist参数必须是一个切片
+// GetRoles4UserID 获取用户角色ID列表
+// 参数：
+//   - ctx: 上下文
+//   - userId: 用户ID
+//
+// 返回：
+//   - roleIds: 角色ID列表
+//   - err: 错误信息
 func (this *EvApiAdapter) GetRoles4UserID(ctx context.Context, userId int) (roleIds []int, err error) {
 	return GetEvApi().GetRoles4UserID(ctx, userId)
 }
 
+// StoreFirst 执行查询SQL，获取第一条结果
+// 参数：
+//   - ctx: 上下文
+//   - dest: 结果接收对象
+//   - sql: SQL语句
+//   - args: SQL参数
+//
+// 返回：
+//   - err: 错误信息
 func (this *EvApiAdapter) StoreFirst(ctx context.Context, dest interface{}, sql string, args ...interface{}) (err error) {
 	return GetEvApi().StoreFirst(ctx, dest, sql, args...)
 }
 
+// LoadDebugPlugin 加载调试插件
+// 参数：
+//   - ctx: 上下文
+//   - req: 加载调试插件请求
+//
+// 返回：
+//   - err: 错误信息
 func (this *EvApiAdapter) LoadDebugPlugin(ctx context.Context, req *dto.LoadDebugPlugin) (err error) {
 	return GetEvApi().LoadDebugPlugin(ctx, req)
 }
 
+// StopDebugPlugin 停止调试插件
+// 参数：
+//   - ctx: 上下文
+//   - req: 停止调试插件请求
+//
+// 返回：
+//   - err: 错误信息
 func (this *EvApiAdapter) StopDebugPlugin(ctx context.Context, req *dto.StopDebugPlugin) (err error) {
 	return GetEvApi().StopDebugPlugin(ctx, req)
 }
 
+// EsRunDsl 执行ES DSL查询
+// 参数：
+//   - ctx: 上下文
+//   - req: 插件运行DSL请求
+//
+// 返回：
+//   - res: Protobuf响应
+//   - err: 错误信息
 func (this *EvApiAdapter) EsRunDsl(ctx context.Context, req *dto.PluginRunDsl2) (res *proto.Response, err error) {
 
 	return GetEvApi().EsRunDsl(ctx, &dto.PluginRunDsl{
@@ -77,6 +176,10 @@ func (this *EvApiAdapter) EsRunDsl(ctx context.Context, req *dto.PluginRunDsl2) 
 	})
 }
 
+// EsVersion 获取ES版本
+// 返回：
+//   - version: ES版本号
+//   - err: 错误信息
 func (this *EvApiAdapter) EsVersion() (version int, err error) {
 	verson, err := GetEvApi().EsVersion(context.Background(), this.buildEsConnectData())
 	if err != nil {
@@ -86,6 +189,16 @@ func (this *EvApiAdapter) EsVersion() (version int, err error) {
 	return verson, nil
 }
 
+// MysqlExecSql 执行MySQL SQL语句
+// 参数：
+//   - ctx: 上下文
+//   - dbName: 数据库名称
+//   - sql: SQL语句
+//   - args: SQL参数
+//
+// 返回：
+//   - rowsAffected: 影响的行数
+//   - err: 错误信息
 func (this *EvApiAdapter) MysqlExecSql(ctx context.Context, dbName, sql string, args ...interface{}) (rowsAffected int64, err error) {
 	return GetEvApi().MysqlExecSql(ctx, &dto.MysqlExecReq{
 		EsConnectData: this.buildEsConnectData(),
@@ -95,6 +208,17 @@ func (this *EvApiAdapter) MysqlExecSql(ctx context.Context, dbName, sql string, 
 	})
 }
 
+// MysqlSelectSql 执行MySQL查询SQL
+// 参数：
+//   - ctx: 上下文
+//   - dbName: 数据库名称
+//   - sql: SQL语句
+//   - args: SQL参数
+//
+// 返回：
+//   - columns: 列名列表
+//   - res: 查询结果
+//   - err: 错误信息
 func (this *EvApiAdapter) MysqlSelectSql(ctx context.Context, dbName, sql string, args ...interface{}) (columns []string, res []map[string]interface{}, err error) {
 	return GetEvApi().MysqlSelectSql(ctx, &dto.MysqlSelectReq{
 		EsConnectData: this.buildEsConnectData(),
@@ -104,6 +228,16 @@ func (this *EvApiAdapter) MysqlSelectSql(ctx context.Context, dbName, sql string
 	})
 }
 
+// MysqlFirstSql 执行MySQL查询SQL，获取第一条结果
+// 参数：
+//   - ctx: 上下文
+//   - dbName: 数据库名称
+//   - sql: SQL语句
+//   - args: SQL参数
+//
+// 返回：
+//   - res: 查询结果
+//   - err: 错误信息
 func (this *EvApiAdapter) MysqlFirstSql(ctx context.Context, dbName, sql string, args ...interface{}) (res map[string]interface{}, err error) {
 	return GetEvApi().MysqlFirstSql(ctx, &dto.MysqlSelectReq{
 		EsConnectData: this.buildEsConnectData(),
@@ -113,6 +247,15 @@ func (this *EvApiAdapter) MysqlFirstSql(ctx context.Context, dbName, sql string,
 	})
 }
 
+// RedisExecCommand 执行Redis命令
+// 参数：
+//   - ctx: 上下文
+//   - dbName: 数据库索引
+//   - args: 命令参数
+//
+// 返回：
+//   - data: 执行结果
+//   - err: 错误信息
 func (this *EvApiAdapter) RedisExecCommand(ctx context.Context, dbName int, args ...interface{}) (data interface{}, err error) {
 	return GetEvApi().RedisExecCommand(ctx, &dto.RedisExecReq{
 		EsConnectData: this.buildEsConnectData(),
@@ -121,6 +264,16 @@ func (this *EvApiAdapter) RedisExecCommand(ctx context.Context, dbName int, args
 	})
 }
 
+// ExecMongoCommand 执行MongoDB命令
+// 参数：
+//   - ctx: 上下文
+//   - dbName: 数据库名称
+//   - command: MongoDB命令
+//   - timeout: 超时时间
+//
+// 返回：
+//   - res: 执行结果
+//   - err: 错误信息
 func (this *EvApiAdapter) ExecMongoCommand(ctx context.Context, dbName string, command bson.D, timeout time.Duration) (res bson.M, err error) {
 	return GetEvApi().ExecMongoCommand(ctx, &dto.MongoExecReq{
 		EsConnectData: this.buildEsConnectData(),
@@ -130,6 +283,13 @@ func (this *EvApiAdapter) ExecMongoCommand(ctx context.Context, dbName string, c
 	})
 }
 
+// ShowMongoDbs 显示MongoDB数据库列表
+// 参数：
+//   - ctx: 上下文
+//
+// 返回：
+//   - 数据库名称列表
+//   - 错误信息
 func (this *EvApiAdapter) ShowMongoDbs(ctx context.Context) ([]string, error) {
 	return GetEvApi().ShowMongoDbs(ctx, &dto.ShowMongoDbsReq{EsConnectData: this.buildEsConnectData()})
 }

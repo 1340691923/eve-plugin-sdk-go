@@ -1,6 +1,7 @@
 package plugin_server
 
 import (
+	"context"
 	"embed"
 	"encoding/json"
 	"flag"
@@ -32,7 +33,7 @@ type ServeOpts struct {
 
 	Migration *build.Gormigrate
 
-	ReadyCallBack func()
+	ReadyCallBack func(ctx context.Context)
 
 	ExitCallback func()
 }

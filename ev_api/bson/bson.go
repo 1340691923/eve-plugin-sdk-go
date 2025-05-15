@@ -7,42 +7,49 @@
 // Based on gopkg.in/mgo.v2/bson by Gustavo Niemeyer
 // See THIRD-PARTY-NOTICES for original license terms.
 
+// bson包提供了与MongoDB BSON格式交互的类型和函数
+// 本包是对MongoDB官方驱动中bson包的简化封装，提供了基本的BSON类型
 package bson // import "go.mongodb.org/mongo-driver/bson"
 
+// 导入原始类型包
 import "github.com/1340691923/eve-plugin-sdk-go/ev_api/primitive"
 
-// Zeroer allows custom struct types to implement a report of zero
-// state. All struct types that don't implement Zeroer or where IsZero
-// returns false are considered to be not zero.
+// Zeroer 允许自定义结构类型实现零值状态报告
+// 所有未实现Zeroer接口或IsZero返回false的结构类型被认为是非零值
 type Zeroer interface {
+	// IsZero 返回该类型是否处于零值状态
 	IsZero() bool
 }
 
-// D is an ordered representation of a BSON document. This type should be used when the order of the elements matters,
-// such as MongoDB command documents. If the order of the elements does not matter, an M should be used instead.
+// D 是BSON文档的有序表示
+// 当元素顺序很重要时应使用此类型，例如MongoDB命令文档
+// 如果元素顺序不重要，应该使用M类型
 //
-// A D should not be constructed with duplicate key names, as that can cause undefined server behavior.
+// # D不应构造具有重复键名的文档，因为这可能导致未定义的服务器行为
 //
-// Example usage:
+// 示例用法:
 //
 //	bson.D{{"foo", "bar"}, {"hello", "world"}, {"pi", 3.14159}}
 type D = primitive.D
 
-// E represents a BSON element for a D. It is usually used inside a D.
+// E 表示D中的BSON元素
+// 通常在D内部使用
 type E = primitive.E
 
-// M is an unordered representation of a BSON document. This type should be used when the order of the elements does not
-// matter. This type is handled as a regular map[string]interface{} when encoding and decoding. Elements will be
-// serialized in an undefined, random order. If the order of the elements matters, a D should be used instead.
+// M 是BSON文档的无序表示
+// 当元素顺序不重要时应使用此类型
+// 编码和解码时此类型被视为普通的map[string]interface{}
+// 元素将按未定义的随机顺序序列化
+// 如果元素顺序很重要，应该使用D类型
 //
-// Example usage:
+// 示例用法:
 //
 //	bson.M{"foo": "bar", "hello": "world", "pi": 3.14159}
 type M = primitive.M
 
-// An A is an ordered representation of a BSON array.
+// A 是BSON数组的有序表示
 //
-// Example usage:
+// 示例用法:
 //
 //	bson.A{"bar", "world", 3.14159, bson.D{{"qux", 12345}}}
 type A = primitive.A

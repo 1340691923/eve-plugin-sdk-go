@@ -1,152 +1,211 @@
+// 定义使用proto3语法
 syntax = "proto3";
+// 定义包名
 package pluginv2;
 
+// 定义Go语言包名路径
 option go_package = "./;pluginv2";
 
 //-----------------------------------------------
-// Common
+// Common - 通用数据结构
 //-----------------------------------------------
 
+// AppInstanceSettings 应用实例设置
 message AppInstanceSettings {
+  // JSON数据
   bytes jsonData = 3;
+  // 解密后的安全JSON数据
   map<string,string> decryptedSecureJsonData = 4;
+  // 最后更新时间戳（毫秒）
   int64 lastUpdatedMS = 5;
 }
 
+// DataSourceInstanceSettings 数据源实例设置
 message DataSourceInstanceSettings {
+  // 数据源ID
   int64 id = 1;
+  // 数据源名称
   string name = 2;
+  // 数据源URL
   string url = 3;
+  // 用户名
   string user = 4;
+  // 数据库名
   string database = 5;
+  // 是否启用基本认证
   bool basicAuthEnabled = 6;
+  // 基本认证用户名
   string basicAuthUser = 7;
+  // JSON数据
   bytes jsonData = 8;
+  // 解密后的安全JSON数据
   map<string,string> decryptedSecureJsonData = 9;
+  // 最后更新时间戳（毫秒）
   int64 lastUpdatedMS = 10;
+  // 数据源唯一标识符
   string uid = 11;
 }
 
+// User 用户信息
 message User {
+  // 登录名
   string login = 1;
+  // 用户名
   string name = 2;
+  // 邮箱
   string email = 3;
+  // 角色
   string role = 4;
 }
 
+// PluginContext 插件上下文
 message PluginContext {
-  // The Grafana organization id the request originating from.
+  // Grafana组织ID
   int64 orgId = 1;
 
-  // The unique identifier of the plugin the request  originating from.
+  // 插件的唯一标识符
   string pluginId = 2;
 
-  // The Grafana user the request originating from.
+  // 发起请求的Grafana用户
   //
-  // Will not be provided if Grafana backend initiated the request.
+  // 如果请求由Grafana后端发起，则不提供此字段
   User user = 3;
 
-  // App plugin instance settings is the configured app instance settings.
-  // In Grafana an app instance is an enabled app plugin in a
-  // Grafana organization.
+  // 应用插件实例设置
+  // 在Grafana中，应用实例是在Grafana组织中启用的应用插件
   //
-  // Will only be set if request targeting an app instance.
+  // 仅在请求针对应用实例时设置
   AppInstanceSettings appInstanceSettings = 4;
 
-  // Data source instance settings is the configured data source instance
-  // settings. In Grafana a data source instance is a created data source
-  // in a Grafana organization.
+  // 数据源实例设置
+  // 在Grafana中，数据源实例是在Grafana组织中创建的数据源
   //
-  // Will only be set if request targeting a data source instance.
+  // 仅在请求针对数据源实例时设置
   DataSourceInstanceSettings dataSourceInstanceSettings = 5;
 }
 
 //---------------------------------------------------------
-// Resource service enables HTTP-style requests over gRPC.
+// Resource service - 资源服务，通过gRPC启用HTTP风格的请求
 //---------------------------------------------------------
 
+// Resource 资源服务
 service Resource {
+  // CallResource 调用资源
   rpc CallResource(CallResourceRequest) returns (stream CallResourceResponse);
 }
 
+// StringList 字符串列表
 message StringList {
+  // 字符串值列表
   repeated string values = 1;
 }
 
+// CallResourceRequest 调用资源请求
 message CallResourceRequest {
+  // 插件上下文
   PluginContext pluginContext = 1;
+  // 路径
   string path = 2;
+  // 请求方法
   string method = 3;
+  // URL
   string url = 4;
+  // 请求头
   map<string,StringList> headers = 5;
+  // 请求体
   bytes body = 6;
 }
 
+// CallResourceResponse 调用资源响应
 message CallResourceResponse {
-  // Maps to raw HTTP status codes when passed over HTTP
+  // 映射到HTTP状态码
   int32 code = 1;
 
-  // Raw HTTP headers sent to the client
+  // 发送给客户端的HTTP头
   map<string,StringList> headers = 2;
 
-  // Raw HTTP body bytes sent to the client
+  // 发送给客户端的HTTP体
   bytes body = 3;
 }
 
 
-//插件信息
+// 插件信息服务
 service PluginInfo {
+  // 获取插件信息
   rpc Get(PluginInfoGetReq) returns (PluginInfoGetRes);
+  // 检查插件健康状态
   rpc CheckHealth(CheckHealthRequest) returns (CheckHealthResponse);
 }
 
+// Live 实时数据服务
 service Live {
+  // 发布消息到频道
   rpc Pub2Channel(Pub2ChannelRequest) returns (Pub2ChannelResponse);
 }
 
+// CheckHealthRequest 健康检查请求
 message CheckHealthRequest {
+  // 插件上下文
   PluginContext pluginContext = 1;
 
-  // Environment info
+  // 环境信息
   map<string,string> headers = 2;
 }
 
+// Pub2ChannelRequest 发布到频道请求
 message Pub2ChannelRequest {
+  // 插件上下文
   PluginContext pluginContext = 1;
+  // 频道名称
   string channel = 2;
+  // JSON详情数据
   bytes jsonDetails = 3;
 }
 
+// Pub2ChannelResponse 发布到频道响应
 message Pub2ChannelResponse {
+  // PubStatus 发布状态枚举
   enum PubStatus {
-    UNKNOWN = 0;
-    OK = 1;
-    ERROR = 2;
+    UNKNOWN = 0; // 未知
+    OK = 1;      // 成功
+    ERROR = 2;   // 错误
   }
 
+  // 发布状态
   PubStatus status = 1;
+  // 消息
   string message = 2;
+  // JSON详情数据
   bytes jsonDetails = 3;
 }
 
+// CheckHealthResponse 健康检查响应
 message CheckHealthResponse {
+  // HealthStatus 健康状态枚举
   enum HealthStatus {
-    UNKNOWN = 0;
-    OK = 1;
-    ERROR = 2;
+    UNKNOWN = 0; // 未知
+    OK = 1;      // 正常
+    ERROR = 2;   // 错误
   }
 
+  // 健康状态
   HealthStatus status = 1;
+  // 消息
   string message = 2;
+  // JSON详情数据
   bytes jsonDetails = 3;
 }
 
-
+// PluginInfoGetReq 获取插件信息请求
 message PluginInfoGetReq {
+  // 插件上下文
   PluginContext pluginContext = 1;
 }
 
+// PluginInfoGetRes 获取插件信息响应
 message PluginInfoGetRes {
+  // 插件ID
   string pluginID = 1;
+  // 插件版本
   string pluginVersion = 2;
 }

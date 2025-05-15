@@ -26,7 +26,7 @@ type ServeOpts struct {
 
 	Debug bool
 
-	ReadyCallback func()
+	ReadyCallback func(ctx context.Context)
 
 	ExitCallback func()
 }
@@ -66,7 +66,10 @@ func Serve(opts ServeOpts) {
 
 	reattachConfig := make(chan *plugin.ReattachConfig)
 	closeCh := make(chan struct{})
-	exitCtx, cancelFn := context.WithCancel(context.Background())
+	debugExitCtx, debugCancelFn := context.WithCancel(context.Background())
+
+	pluginExitCtx, pluginCancelFn := context.WithCancel(context.Background())
+
 	if opts.Debug {
 		os.Setenv(MagicCookieKey, MagicCookieValue)
 		go plugin.Serve(&plugin.ServeConfig{
@@ -75,7 +78,7 @@ func Serve(opts ServeOpts) {
 			VersionedPlugins: versionedPlugins,
 			Plugins:          pSet,
 			Test: &plugin.ServeTestConfig{
-				Context:          exitCtx,
+				Context:          debugExitCtx,
 				ReattachConfigCh: reattachConfig,
 				CloseCh:          closeCh,
 				SyncStdio:        false,
@@ -96,14 +99,14 @@ func Serve(opts ServeOpts) {
 						if r := recover(); r != nil {
 							log.Println("ReadyCallback 发生 panic:", r)
 						}
-						opts.ReadyCallback()
+						opts.ReadyCallback(pluginExitCtx)
 					}()
 				}
 				log.Println(fmt.Sprintf("正常链接ev基座"))
 			}
 		}
 		util.WaitQuit(func() {
-			cancelFn()
+			debugCancelFn()
 		})
 	} else {
 		go func() {
@@ -112,7 +115,7 @@ func Serve(opts ServeOpts) {
 					if r := recover(); r != nil {
 						log.Println("ReadyCallback 发生 panic:", r)
 					}
-					opts.ReadyCallback()
+					opts.ReadyCallback(pluginExitCtx)
 				}()
 			}
 			plugin.Serve(&plugin.ServeConfig{
@@ -126,6 +129,10 @@ func Serve(opts ServeOpts) {
 
 	<-closeCh
 
+	pluginCancelFn()
+	if opts.ExitCallback != nil {
+		opts.ExitCallback()
+	}
 	if opts.Debug {
 		err := ev_api.GetEvApi().StopDebugPlugin(context.Background(), &dto.StopDebugPlugin{
 			ID: opts.PluginID,
@@ -134,9 +141,7 @@ func Serve(opts ServeOpts) {
 			logger.DefaultLogger.Debug(fmt.Sprintf("停止调试插件进程异常:%s", err.Error()))
 		}
 	}
-	if opts.ExitCallback != nil {
-		opts.ExitCallback()
-	}
+
 	logger.DefaultLogger.Debug("Plugin server exited")
 
 	return

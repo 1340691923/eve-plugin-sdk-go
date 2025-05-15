@@ -1,45 +1,89 @@
+// ev_api包提供EVE API的接口和实现
 package ev_api
 
+// 导入所需的包
 import (
+	// 上下文包
 	"context"
+	// JSON编码包
 	"encoding/json"
+	// 格式化包
 	"fmt"
+	// 日志包
 	"github.com/1340691923/eve-plugin-sdk-go/backend/logger"
+	// 枚举包
+	"github.com/1340691923/eve-plugin-sdk-go/enum"
+	// MongoDB BSON包
 	"github.com/1340691923/eve-plugin-sdk-go/ev_api/bson"
+	// 数据传输对象包
 	"github.com/1340691923/eve-plugin-sdk-go/ev_api/dto"
+	// Protobuf协议包
 	"github.com/1340691923/eve-plugin-sdk-go/ev_api/proto"
+	// 视图对象包
 	"github.com/1340691923/eve-plugin-sdk-go/ev_api/vo"
+	// 生成的Protobuf包
 	"github.com/1340691923/eve-plugin-sdk-go/genproto/pluginv2"
+	// 高性能JSON包
 	json2 "github.com/goccy/go-json"
+	// 错误处理包
 	"github.com/pkg/errors"
+	// 类型转换包
 	"github.com/spf13/cast"
+	// 高性能HTTP客户端
 	"github.com/valyala/fasthttp"
+	// Protobuf编码包
 	protobuf "google.golang.org/protobuf/proto"
+	// URL处理包
+	"net/url"
+	// 路径处理包
+	"path"
+	// 并发控制包
 	"sync"
+	// 时间处理包
 	"time"
 )
 
+// evApi 实现EVE API的结构体
 type evApi struct {
-	rpcPort  string
-	debug    bool
+	// RPC端口
+	rpcPort string
+	// 调试模式标志
+	debug bool
+	// 插件ID
 	pluginId string
-	client   *fasthttp.Client
+	// HTTP客户端
+	client *fasthttp.Client
 }
 
+// 全局变量
 var (
-	once     *sync.Once
+	// 单例模式控制
+	once *sync.Once
+	// 全局API对象
 	evApiObj *evApi
 )
 
+// init 初始化函数
 func init() {
+	// 初始化once
 	once = new(sync.Once)
 }
 
+// SetEvApi 设置EVE API实例
+// 参数：
+//   - rpcPort: RPC服务端口
+//   - pluginId: 插件ID
+//   - debug: 调试模式标志
+//
+// 返回：
+//   - *evApi: EVE API实例
 func SetEvApi(rpcPort, pluginId string, debug bool) *evApi {
+	// 创建HTTP客户端，设置超时
 	client := &fasthttp.Client{
 		ReadTimeout:  300 * time.Second,
 		WriteTimeout: 300 * time.Second,
 	}
+	// 使用sync.Once确保单例模式
 	once.Do(func() {
 		evApiObj = &evApi{
 			rpcPort:  rpcPort,
@@ -52,21 +96,43 @@ func SetEvApi(rpcPort, pluginId string, debug bool) *evApi {
 	return evApiObj
 }
 
+// GetEvApi 获取全局EVE API实例
+// 返回：
+//   - *evApi: EVE API实例
 func GetEvApi() *evApi {
 	return evApiObj
 }
 
+// EsVersion 获取Elasticsearch版本
+// 参数：
+//   - ctx: 上下文
+//   - req: ES连接数据
+//
+// 返回：
+//   - version: ES版本号
+//   - err: 错误信息
 func (this *evApi) EsVersion(ctx context.Context, req dto.EsConnectData) (version int, err error) {
+	// 定义返回结构
 	res := vo.ApiCommonRes{}
+	// 发送请求
 	err = this.request(ctx, "api/plugin_util/EsVersion", req, &res)
 	if err != nil {
 		return 0, err
 	}
+	// 转换并返回版本号
 	return cast.ToInt(res.Data), nil
 }
 
+// EsCatNodes 获取ES节点信息
+// 参数：
+//   - ctx: 上下文
+//   - req: Cat节点请求
+//
+// 返回：
+//   - res: Protobuf响应
+//   - err: 错误信息
 func (this *evApi) EsCatNodes(ctx context.Context, req dto.CatNodesReq) (res *proto.Response, err error) {
-
+	// 发送Protobuf请求
 	res, err = this.requestProtobuf(ctx, "api/plugin_util/EsCatNodes", req)
 	if err != nil {
 		return
@@ -74,8 +140,16 @@ func (this *evApi) EsCatNodes(ctx context.Context, req dto.CatNodesReq) (res *pr
 	return
 }
 
+// EsClusterStats 获取ES集群统计信息
+// 参数：
+//   - ctx: 上下文
+//   - req: 集群统计请求
+//
+// 返回：
+//   - res: Protobuf响应
+//   - err: 错误信息
 func (this *evApi) EsClusterStats(ctx context.Context, req dto.ClusterStatsReq) (res *proto.Response, err error) {
-
+	// 发送Protobuf请求
 	res, err = this.requestProtobuf(ctx, "api/plugin_util/EsClusterStats", req)
 	if err != nil {
 		return
@@ -83,8 +157,16 @@ func (this *evApi) EsClusterStats(ctx context.Context, req dto.ClusterStatsReq) 
 	return
 }
 
+// EsPerformRequest 执行ES请求
+// 参数：
+//   - ctx: 上下文
+//   - req: 执行请求参数
+//
+// 返回：
+//   - res: Protobuf响应
+//   - err: 错误信息
 func (this *evApi) EsPerformRequest(ctx context.Context, req dto.PerformRequest) (res *proto.Response, err error) {
-
+	// 发送Protobuf请求
 	res, err = this.requestProtobuf(ctx, "api/plugin_util/EsPerformRequest", req)
 	if err != nil {
 		return
@@ -92,8 +174,16 @@ func (this *evApi) EsPerformRequest(ctx context.Context, req dto.PerformRequest)
 	return
 }
 
+// EsIndicesSegmentsRequest 获取ES索引分段信息
+// 参数：
+//   - ctx: 上下文
+//   - req: 索引分段请求
+//
+// 返回：
+//   - res: Protobuf响应
+//   - err: 错误信息
 func (this *evApi) EsIndicesSegmentsRequest(ctx context.Context, req dto.IndicesSegmentsRequest) (res *proto.Response, err error) {
-
+	// 发送Protobuf请求
 	res, err = this.requestProtobuf(ctx, "api/plugin_util/EsIndicesSegmentsRequest", req)
 	if err != nil {
 		return
@@ -457,6 +547,49 @@ func (this *evApi) StoreMoreExec(ctx context.Context, sqls []dto.ExecSql) (err e
 	return nil
 }
 
+func (this *evApi) LiveBroadcastEvMsg2All(ctx context.Context, notice *dto.NoticeData) (err error) {
+	err = notice.Validate()
+	if err != nil {
+		return errors.WithStack(err)
+	}
+
+	notice.PluginAlias = this.pluginId
+
+	err = this.request(ctx, "api/plugin_util/LiveBroadcastEvMsg2All", &dto.LiveBroadcastEvMsg2AllReq{NoticeData: notice}, &vo.ApiCommonRes{})
+	if err != nil {
+		return errors.WithStack(err)
+	}
+	return nil
+}
+
+func (this *evApi) LiveBroadcastEvMsg2Roles(ctx context.Context, notice *dto.NoticeData, roleIds []int) (err error) {
+	err = notice.Validate()
+	if err != nil {
+		return errors.WithStack(err)
+	}
+
+	notice.PluginAlias = this.pluginId
+
+	err = this.request(ctx, "api/plugin_util/LiveBroadcastEvMsg2Roles", &dto.LiveBroadcastEvMsg2RolesReq{NoticeData: notice, RoleIds: roleIds}, &vo.ApiCommonRes{})
+	if err != nil {
+		return errors.WithStack(err)
+	}
+	return nil
+}
+
+func (this *evApi) LiveBroadcastEvMsg2Users(ctx context.Context, notice *dto.NoticeData, userIds []int) (err error) {
+	err = notice.Validate()
+	if err != nil {
+		return errors.WithStack(err)
+	}
+	notice.PluginAlias = this.pluginId
+	err = this.request(ctx, "api/plugin_util/LiveBroadcastEvMsg2Users", &dto.LiveBroadcastEvMsg2UsersReq{NoticeData: notice, UserIds: userIds}, &vo.ApiCommonRes{})
+	if err != nil {
+		return errors.WithStack(err)
+	}
+	return nil
+}
+
 func (this *evApi) StoreSave(ctx context.Context, table string, data interface{}) (err error) {
 	err = this.request(ctx, "api/plugin_util/SaveDb", &dto.SaveDb{PluginId: this.pluginId, TableName: table, Data: data}, &vo.ApiCommonRes{})
 	if err != nil {
@@ -781,8 +914,7 @@ func (this *evApi) SendRequest(ctx context.Context, api API, method string, requ
 	req.Header.SetMethod(method)
 	req.Header.Set("Content-Type", "application/json")
 	// 设置自定义头
-	req.Header.Set("X-Plugin-ID", this.pluginId)
-	//req.Header.Set("X-Plugin-Signature", signature)
+	req.Header.Set(enum.EvFromPluginID, this.pluginId)
 
 	// 设置请求体
 	req.SetBody(requestDataJSON)
@@ -797,14 +929,106 @@ func (this *evApi) SendRequest(ctx context.Context, api API, method string, requ
 	}()
 
 	select {
-	case <-ctx.Done(): // 如果 context 超时或取消
+	case <-ctx.Done():
+		// 防止 goroutine 泄漏
+		go func() { <-errCh }()
 		return nil, errors.WithStack(ctx.Err())
-	case err := <-errCh: // 请求完成
+
+	case err := <-errCh:
 		if err != nil {
-			return nil, errors.Errorf("request failed: %w", err)
+			return nil, errors.WithStack(fmt.Errorf("request failed: %w", err))
 		}
 	}
 
 	// 返回响应体
+	return resp.Body(), nil
+}
+
+type PluginRequestOptions struct {
+	QueryParams url.Values        // URL 查询参数
+	Headers     map[string]string // 自定义 Headers（包含 Content-Type）
+	Timeout     time.Duration     // 请求超时时间（优先于 ctx 的超时）
+	UserId      int               //当前操作者id
+}
+
+func (this *evApi) CallPlugin(
+	ctx context.Context,
+	pluginAlias string,
+	api string,
+	method string,
+	body []byte,
+	opts *PluginRequestOptions,
+) ([]byte, error) {
+	// 保护 opts 为非 nil
+	if opts == nil {
+		opts = &PluginRequestOptions{}
+	}
+
+	req := fasthttp.AcquireRequest()
+	defer fasthttp.ReleaseRequest(req)
+
+	resp := fasthttp.AcquireResponse()
+	defer fasthttp.ReleaseResponse(resp)
+
+	// 使用 path.Join 处理路径拼接，避免 // 或缺失 /
+	fullPath := path.Join(pluginAlias, api)
+
+	// 构建 URL + query 参数
+	url := fmt.Sprintf("http://127.0.0.1:%s/api/plugin_util/CallPlugin/%s", this.rpcPort, fullPath)
+	if len(opts.QueryParams) > 0 {
+		url += "?" + opts.QueryParams.Encode()
+	}
+	req.SetRequestURI(url)
+	req.Header.SetMethod(method)
+
+	// 固定头
+	req.Header.Set(enum.EvFromPluginID, this.pluginId)
+
+	if opts.Headers["Content-Type"] == "" {
+		req.Header.Set("Content-Type", "application/json")
+	}
+
+	if opts.UserId > 0 {
+		req.Header.Set(enum.EvUserID, cast.ToString(opts.UserId))
+	}
+
+	// 用户自定义头
+	for k, v := range opts.Headers {
+		req.Header.Set(k, v)
+	}
+
+	// 设置 Body（不自动设置 Content-Type）
+	if len(body) > 0 {
+		req.SetBody(body)
+	}
+
+	// 判断是否设置超时时间
+	timeout := opts.Timeout
+
+	// 使用 channel 管理 goroutine 错误
+	errCh := make(chan error, 1)
+
+	go func() {
+		var err error
+		if timeout > 0 {
+			err = this.client.DoTimeout(req, resp, timeout)
+		} else {
+			err = this.client.Do(req, resp)
+		}
+		errCh <- err
+	}()
+
+	select {
+	case <-ctx.Done():
+		// 防止 goroutine 泄漏
+		go func() { <-errCh }()
+		return nil, errors.WithStack(ctx.Err())
+
+	case err := <-errCh:
+		if err != nil {
+			return nil, errors.WithStack(fmt.Errorf("request failed: %w", err))
+		}
+	}
+
 	return resp.Body(), nil
 }
