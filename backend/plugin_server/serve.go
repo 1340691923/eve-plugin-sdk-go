@@ -20,6 +20,7 @@ var PluginJson *build.PluginJsonData
 type Assets struct {
 	PluginJsonBytes []byte
 	FrontendFiles   embed.FS
+	Icon embed.FS
 }
 
 type ServeOpts struct {
@@ -90,7 +91,7 @@ func Serve(opts ServeOpts) {
 
 	backend.Serve(backend.ServeOpts{
 		PluginJson:          pluginJson,
-		CallResourceHandler: call_resource.NewResourceHandler(webEngine, opts.Assets.FrontendFiles),
+		CallResourceHandler: call_resource.NewResourceHandler(webEngine, opts.Assets.FrontendFiles,opts.Assets.Icon),
 		CheckHealthHandler:  check_health.NewCheckHealthSvr(pluginJson, opts.Migration, webEngine),
 		GRPCSettings:        opts.GRPCSettings,
 		LiveHandler:         opts.LiveHandler,

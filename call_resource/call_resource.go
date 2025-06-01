@@ -22,7 +22,18 @@ import (
 )
 
 // NewResourceHandler 创建一个新的资源处理器
-func NewResourceHandler(webEngine *web_engine.WebEngine, frontendFiles embed.FS) backend.CallResourceHandler {
+func NewResourceHandler(webEngine *web_engine.WebEngine, frontendFiles embed.FS,iconData embed.FS) backend.CallResourceHandler {
+
+	webEngine.GetGinEngine().GET("/icon", func(c *gin.Context) {
+		// 从 embed.FS 中读取 PNG 文件
+		fileBytes, err := iconData.ReadFile("logo.png")
+		if err != nil {
+			c.String(http.StatusInternalServerError, "Failed to load icon: %v", err)
+			return
+		}
+		// 设置 Content-Type 并返回文件内容
+		c.Data(http.StatusOK, "image/png", fileBytes)
+	})
 
 	// 配置前端文件服务
 	// 因为前端所用技术可以进行热更新，所以可进行脱离插件控制

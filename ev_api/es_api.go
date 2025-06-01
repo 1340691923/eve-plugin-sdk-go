@@ -160,7 +160,7 @@ func (this *EvApiAdapter) StopDebugPlugin(ctx context.Context, req *dto.StopDebu
 //   - req: 插件运行DSL请求
 //
 // 返回：
-//   - res: Protobuf响应
+//   - res: *proto.Response
 //   - err: 错误信息
 func (this *EvApiAdapter) EsRunDsl(ctx context.Context, req *dto.PluginRunDsl2) (res *proto.Response, err error) {
 
@@ -208,7 +208,7 @@ func (this *EvApiAdapter) MysqlExecSql(ctx context.Context, dbName, sql string, 
 	})
 }
 
-// MysqlSelectSql 执行MySQL查询SQL
+// MysqlSelectSql 执行MySQL查询语句
 // 参数：
 //   - ctx: 上下文
 //   - dbName: 数据库名称
@@ -228,7 +228,7 @@ func (this *EvApiAdapter) MysqlSelectSql(ctx context.Context, dbName, sql string
 	})
 }
 
-// MysqlFirstSql 执行MySQL查询SQL，获取第一条结果
+// MysqlFirstSql 执行MySQL查询并获取第一条记录
 // 参数：
 //   - ctx: 上下文
 //   - dbName: 数据库名称
@@ -250,8 +250,8 @@ func (this *EvApiAdapter) MysqlFirstSql(ctx context.Context, dbName, sql string,
 // RedisExecCommand 执行Redis命令
 // 参数：
 //   - ctx: 上下文
-//   - dbName: 数据库索引
-//   - args: 命令参数
+//   - dbName: 数据库编号
+//   - args: Redis命令参数
 //
 // 返回：
 //   - data: 执行结果
@@ -288,12 +288,20 @@ func (this *EvApiAdapter) ExecMongoCommand(ctx context.Context, dbName string, c
 //   - ctx: 上下文
 //
 // 返回：
-//   - 数据库名称列表
-//   - 错误信息
+//   - []string: 数据库名称列表
+//   - error: 错误信息
 func (this *EvApiAdapter) ShowMongoDbs(ctx context.Context) ([]string, error) {
 	return GetEvApi().ShowMongoDbs(ctx, &dto.ShowMongoDbsReq{EsConnectData: this.buildEsConnectData()})
 }
 
+// EsCatNodes 获取ES节点信息
+// 参数：
+//   - ctx: 上下文
+//   - h: 显示的字段列表
+//
+// 返回：
+//   - res: *proto.Response
+//   - err: 错误信息
 func (this *EvApiAdapter) EsCatNodes(ctx context.Context, h []string) (res *proto.Response, err error) {
 	return GetEvApi().EsCatNodes(ctx, dto.CatNodesReq{
 		EsConnectData:  this.buildEsConnectData(),
@@ -301,6 +309,14 @@ func (this *EvApiAdapter) EsCatNodes(ctx context.Context, h []string) (res *prot
 	})
 }
 
+// EsClusterStats 获取ES集群统计信息
+// 参数：
+//   - ctx: 上下文
+//   - human: 是否使用人类可读格式
+//
+// 返回：
+//   - res: *proto.Response
+//   - err: 错误信息
 func (this *EvApiAdapter) EsClusterStats(ctx context.Context, human bool) (res *proto.Response, err error) {
 	return GetEvApi().EsClusterStats(ctx, dto.ClusterStatsReq{
 		EsConnectData:       this.buildEsConnectData(),
@@ -308,6 +324,14 @@ func (this *EvApiAdapter) EsClusterStats(ctx context.Context, human bool) (res *
 	})
 }
 
+// EsIndicesSegmentsRequest 获取ES索引段信息
+// 参数：
+//   - ctx: 上下文
+//   - human: 是否使用人类可读格式
+//
+// 返回：
+//   - res: *proto.Response
+//   - err: 错误信息
 func (this *EvApiAdapter) EsIndicesSegmentsRequest(ctx context.Context, human bool) (res *proto.Response, err error) {
 	return GetEvApi().EsIndicesSegmentsRequest(ctx, dto.IndicesSegmentsRequest{
 		EsConnectData:              this.buildEsConnectData(),
@@ -315,6 +339,14 @@ func (this *EvApiAdapter) EsIndicesSegmentsRequest(ctx context.Context, human bo
 	})
 }
 
+// EsPerformRequest 执行自定义ES请求
+// 参数：
+//   - ctx: 上下文
+//   - req: HTTP请求对象
+//
+// 返回：
+//   - res: *proto.Response
+//   - err: 错误信息
 func (this *EvApiAdapter) EsPerformRequest(ctx context.Context, req *http.Request) (res *proto.Response, err error) {
 
 	request := &dto.Request{
@@ -339,10 +371,25 @@ func (this *EvApiAdapter) EsPerformRequest(ctx context.Context, req *http.Reques
 	})
 }
 
+// Ping 测试ES连接
+// 参数：
+//   - ctx: 上下文
+//
+// 返回：
+//   - res: *proto.Response
+//   - err: 错误信息
 func (this *EvApiAdapter) Ping(ctx context.Context) (res *proto.Response, err error) {
 	return GetEvApi().Ping(ctx, dto.PingReq{EsConnectData: this.buildEsConnectData()})
 }
 
+// EsRefresh 刷新ES索引
+// 参数：
+//   - ctx: 上下文
+//   - indexNames: 索引名称列表
+//
+// 返回：
+//   - res: *proto.Response
+//   - err: 错误信息
 func (this *EvApiAdapter) EsRefresh(ctx context.Context, indexNames []string) (res *proto.Response, err error) {
 	return GetEvApi().EsRefresh(ctx, dto.RefreshReq{
 		EsConnectData:  this.buildEsConnectData(),
@@ -350,6 +397,14 @@ func (this *EvApiAdapter) EsRefresh(ctx context.Context, indexNames []string) (r
 	})
 }
 
+// EsOpen 打开ES索引
+// 参数：
+//   - ctx: 上下文
+//   - indexNames: 索引名称列表
+//
+// 返回：
+//   - res: *proto.Response
+//   - err: 错误信息
 func (this *EvApiAdapter) EsOpen(ctx context.Context, indexNames []string) (res *proto.Response, err error) {
 	return GetEvApi().EsOpen(ctx, dto.OpenReq{
 		EsConnectData: this.buildEsConnectData(),
@@ -357,6 +412,14 @@ func (this *EvApiAdapter) EsOpen(ctx context.Context, indexNames []string) (res 
 	})
 }
 
+// EsFlush 强制刷新ES索引
+// 参数：
+//   - ctx: 上下文
+//   - indexNames: 索引名称列表
+//
+// 返回：
+//   - res: *proto.Response
+//   - err: 错误信息
 func (this *EvApiAdapter) EsFlush(ctx context.Context, indexNames []string) (res *proto.Response, err error) {
 	return GetEvApi().EsFlush(ctx, dto.FlushReq{
 		EsConnectData: this.buildEsConnectData(),
@@ -364,6 +427,14 @@ func (this *EvApiAdapter) EsFlush(ctx context.Context, indexNames []string) (res
 	})
 }
 
+// EsIndicesClearCache 清除ES索引缓存
+// 参数：
+//   - ctx: 上下文
+//   - indexNames: 索引名称列表
+//
+// 返回：
+//   - res: *proto.Response
+//   - err: 错误信息
 func (this *EvApiAdapter) EsIndicesClearCache(ctx context.Context, indexNames []string) (res *proto.Response, err error) {
 	return GetEvApi().EsIndicesClearCache(ctx, dto.IndicesClearCacheReq{
 		EsConnectData:            this.buildEsConnectData(),
@@ -371,6 +442,14 @@ func (this *EvApiAdapter) EsIndicesClearCache(ctx context.Context, indexNames []
 	})
 }
 
+// EsIndicesClose 关闭ES索引
+// 参数：
+//   - ctx: 上下文
+//   - indexNames: 索引名称列表
+//
+// 返回：
+//   - res: *proto.Response
+//   - err: 错误信息
 func (this *EvApiAdapter) EsIndicesClose(ctx context.Context, indexNames []string) (res *proto.Response, err error) {
 	return GetEvApi().EsIndicesClose(ctx, dto.IndicesCloseReq{
 		EsConnectData:       this.buildEsConnectData(),
@@ -378,6 +457,15 @@ func (this *EvApiAdapter) EsIndicesClose(ctx context.Context, indexNames []strin
 	})
 }
 
+// EsIndicesForcemerge 强制合并ES索引段
+// 参数：
+//   - ctx: 上下文
+//   - indexNames: 索引名称列表
+//   - maxNumSegments: 最大段数
+//
+// 返回：
+//   - res: *proto.Response
+//   - err: 错误信息
 func (this *EvApiAdapter) EsIndicesForcemerge(ctx context.Context, indexNames []string, maxNumSegments *int) (res *proto.Response, err error) {
 	return GetEvApi().EsIndicesForcemerge(ctx, dto.IndicesForcemergeReq{
 		EsConnectData:            this.buildEsConnectData(),
@@ -385,6 +473,16 @@ func (this *EvApiAdapter) EsIndicesForcemerge(ctx context.Context, indexNames []
 	})
 }
 
+// EsDeleteByQuery 按查询条件删除ES文档
+// 参数：
+//   - ctx: 上下文
+//   - indexNames: 索引名称列表
+//   - documents: 文档类型列表
+//   - body: 查询条件
+//
+// 返回：
+//   - res: *proto.Response
+//   - err: 错误信息
 func (this *EvApiAdapter) EsDeleteByQuery(ctx context.Context, indexNames []string, documents []string, body interface{}) (res *proto.Response, err error) {
 	return GetEvApi().EsDeleteByQuery(ctx, dto.DeleteByQueryReq{
 		EsConnectData:        this.buildEsConnectData(),
@@ -392,6 +490,17 @@ func (this *EvApiAdapter) EsDeleteByQuery(ctx context.Context, indexNames []stri
 	})
 }
 
+// EsSnapshotCreate 创建ES快照
+// 参数：
+//   - ctx: 上下文
+//   - repository: 仓库名称
+//   - snapshot: 快照名称
+//   - waitForCompletion: 是否等待完成
+//   - reqJson: 请求JSON
+//
+// 返回：
+//   - res: *proto.Response
+//   - err: 错误信息
 func (this *EvApiAdapter) EsSnapshotCreate(ctx context.Context, repository string, snapshot string, waitForCompletion *bool, reqJson proto.Json) (res *proto.Response, err error) {
 	return GetEvApi().EsSnapshotCreate(ctx, dto.SnapshotCreateReq{
 		EsConnectData:         this.buildEsConnectData(),
@@ -399,6 +508,15 @@ func (this *EvApiAdapter) EsSnapshotCreate(ctx context.Context, repository strin
 	})
 }
 
+// EsSnapshotDelete 删除ES快照
+// 参数：
+//   - ctx: 上下文
+//   - repository: 仓库名称
+//   - snapshot: 快照名称
+//
+// 返回：
+//   - res: *proto.Response
+//   - err: 错误信息
 func (this *EvApiAdapter) EsSnapshotDelete(ctx context.Context, repository string, snapshot string) (res *proto.Response, err error) {
 	return GetEvApi().EsSnapshotDelete(ctx, dto.SnapshotDeleteReq{
 		EsConnectData:         this.buildEsConnectData(),
@@ -406,6 +524,17 @@ func (this *EvApiAdapter) EsSnapshotDelete(ctx context.Context, repository strin
 	})
 }
 
+// EsRestoreSnapshot 恢复ES快照
+// 参数：
+//   - ctx: 上下文
+//   - repository: 仓库名称
+//   - snapshot: 快照名称
+//   - waitForCompletion: 是否等待完成
+//   - reqJson: 请求JSON
+//
+// 返回：
+//   - res: *proto.Response
+//   - err: 错误信息
 func (this *EvApiAdapter) EsRestoreSnapshot(ctx context.Context, repository string, snapshot string, waitForCompletion *bool, reqJson proto.Json) (res *proto.Response, err error) {
 	return GetEvApi().EsRestoreSnapshot(ctx, dto.RestoreSnapshotReq{
 		EsConnectData:          this.buildEsConnectData(),
@@ -413,6 +542,16 @@ func (this *EvApiAdapter) EsRestoreSnapshot(ctx context.Context, repository stri
 	})
 }
 
+// EsSnapshotStatus 获取ES快照状态
+// 参数：
+//   - ctx: 上下文
+//   - repository: 仓库名称
+//   - snapshot: 快照名称列表
+//   - ignoreUnavailable: 是否忽略不可用的快照
+//
+// 返回：
+//   - res: *proto.Response
+//   - err: 错误信息
 func (this *EvApiAdapter) EsSnapshotStatus(ctx context.Context, repository string, snapshot []string, ignoreUnavailable *bool) (res *proto.Response, err error) {
 	return GetEvApi().EsSnapshotStatus(ctx, dto.SnapshotStatusReq{
 		EsConnectData:         this.buildEsConnectData(),
@@ -420,6 +559,14 @@ func (this *EvApiAdapter) EsSnapshotStatus(ctx context.Context, repository strin
 	})
 }
 
+// EsSnapshotGetRepository 获取ES快照仓库
+// 参数：
+//   - ctx: 上下文
+//   - repository: 仓库名称列表
+//
+// 返回：
+//   - res: *proto.Response
+//   - err: 错误信息
 func (this *EvApiAdapter) EsSnapshotGetRepository(ctx context.Context, repository []string) (res *proto.Response, err error) {
 	return GetEvApi().EsSnapshotGetRepository(ctx, dto.SnapshotGetRepositoryReq{
 		EsConnectData:                this.buildEsConnectData(),
@@ -427,6 +574,15 @@ func (this *EvApiAdapter) EsSnapshotGetRepository(ctx context.Context, repositor
 	})
 }
 
+// EsSnapshotCreateRepository 创建ES快照仓库
+// 参数：
+//   - ctx: 上下文
+//   - repository: 仓库名称
+//   - reqJson: 请求JSON
+//
+// 返回：
+//   - res: *proto.Response
+//   - err: 错误信息
 func (this *EvApiAdapter) EsSnapshotCreateRepository(ctx context.Context, repository string, reqJson proto.Json) (res *proto.Response, err error) {
 	return GetEvApi().EsSnapshotCreateRepository(ctx, dto.SnapshotCreateRepositoryReq{
 		EsConnectData:                   this.buildEsConnectData(),
@@ -434,6 +590,14 @@ func (this *EvApiAdapter) EsSnapshotCreateRepository(ctx context.Context, reposi
 	})
 }
 
+// EsSnapshotDeleteRepository 删除ES快照仓库
+// 参数：
+//   - ctx: 上下文
+//   - repository: 仓库名称列表
+//
+// 返回：
+//   - res: *proto.Response
+//   - err: 错误信息
 func (this *EvApiAdapter) EsSnapshotDeleteRepository(ctx context.Context, repository []string) (res *proto.Response, err error) {
 	return GetEvApi().EsSnapshotDeleteRepository(ctx, dto.SnapshotDeleteRepositoryReq{
 		EsConnectData:                   this.buildEsConnectData(),
@@ -441,6 +605,14 @@ func (this *EvApiAdapter) EsSnapshotDeleteRepository(ctx context.Context, reposi
 	})
 }
 
+// EsGetIndices 获取ES索引列表
+// 参数：
+//   - ctx: 上下文
+//   - catIndicesRequest: 索引列表请求参数
+//
+// 返回：
+//   - res: *proto.Response
+//   - err: 错误信息
 func (this *EvApiAdapter) EsGetIndices(ctx context.Context, catIndicesRequest proto.CatIndicesRequest) (res *proto.Response, err error) {
 	return GetEvApi().EsGetIndices(ctx, dto.GetIndicesReq{
 		EsConnectData:     this.buildEsConnectData(),
@@ -448,6 +620,14 @@ func (this *EvApiAdapter) EsGetIndices(ctx context.Context, catIndicesRequest pr
 	})
 }
 
+// EsCatHealth 获取ES集群健康状态
+// 参数：
+//   - ctx: 上下文
+//   - catRequest: 健康状态请求参数
+//
+// 返回：
+//   - res: *proto.Response
+//   - err: 错误信息
 func (this *EvApiAdapter) EsCatHealth(ctx context.Context, catRequest proto.CatHealthRequest) (res *proto.Response, err error) {
 	return GetEvApi().EsCatHealth(ctx, dto.CatHealthReq{
 		EsConnectData:    this.buildEsConnectData(),
@@ -455,6 +635,14 @@ func (this *EvApiAdapter) EsCatHealth(ctx context.Context, catRequest proto.CatH
 	})
 }
 
+// EsCatShards 获取ES分片信息
+// 参数：
+//   - ctx: 上下文
+//   - catRequest: 分片信息请求参数
+//
+// 返回：
+//   - res: *proto.Response
+//   - err: 错误信息
 func (this *EvApiAdapter) EsCatShards(ctx context.Context, catRequest proto.CatShardsRequest) (res *proto.Response, err error) {
 	return GetEvApi().EsCatShards(ctx, dto.CatShardsReq{
 		EsConnectData:    this.buildEsConnectData(),
@@ -462,6 +650,14 @@ func (this *EvApiAdapter) EsCatShards(ctx context.Context, catRequest proto.CatS
 	})
 }
 
+// EsCatCount 获取ES索引文档计数
+// 参数：
+//   - ctx: 上下文
+//   - catRequest: 计数请求参数
+//
+// 返回：
+//   - res: *proto.Response
+//   - err: 错误信息
 func (this *EvApiAdapter) EsCatCount(ctx context.Context, catRequest proto.CatCountRequest) (res *proto.Response, err error) {
 	return GetEvApi().EsCatCount(ctx, dto.CatCountReq{
 		EsConnectData:   this.buildEsConnectData(),
@@ -469,6 +665,14 @@ func (this *EvApiAdapter) EsCatCount(ctx context.Context, catRequest proto.CatCo
 	})
 }
 
+// EsCatAllocationRequest 获取ES分片分配信息
+// 参数：
+//   - ctx: 上下文
+//   - catRequest: 分配信息请求参数
+//
+// 返回：
+//   - res: *proto.Response
+//   - err: 错误信息
 func (this *EvApiAdapter) EsCatAllocationRequest(ctx context.Context, catRequest proto.CatAllocationRequest) (res *proto.Response, err error) {
 	return GetEvApi().EsCatAllocationRequest(ctx, dto.CatAllocationRequest{
 		EsConnectData:            this.buildEsConnectData(),
@@ -476,6 +680,14 @@ func (this *EvApiAdapter) EsCatAllocationRequest(ctx context.Context, catRequest
 	})
 }
 
+// EsCatAliases 获取ES别名信息
+// 参数：
+//   - ctx: 上下文
+//   - catRequest: 别名信息请求参数
+//
+// 返回：
+//   - res: *proto.Response
+//   - err: 错误信息
 func (this *EvApiAdapter) EsCatAliases(ctx context.Context, catRequest proto.CatAliasesRequest) (res *proto.Response, err error) {
 	return GetEvApi().EsCatAliases(ctx, dto.CatAliasesReq{
 		EsConnectData:     this.buildEsConnectData(),
@@ -483,6 +695,14 @@ func (this *EvApiAdapter) EsCatAliases(ctx context.Context, catRequest proto.Cat
 	})
 }
 
+// EsDelete 删除ES文档
+// 参数：
+//   - ctx: 上下文
+//   - deleteRequest: 删除请求参数
+//
+// 返回：
+//   - res: *proto.Response
+//   - err: 错误信息
 func (this *EvApiAdapter) EsDelete(ctx context.Context, deleteRequest proto.DeleteRequest) (res *proto.Response, err error) {
 	return GetEvApi().EsDelete(ctx, dto.DeleteReq{
 		EsConnectData: this.buildEsConnectData(),
@@ -490,6 +710,15 @@ func (this *EvApiAdapter) EsDelete(ctx context.Context, deleteRequest proto.Dele
 	})
 }
 
+// EsUpdate 更新ES文档
+// 参数：
+//   - ctx: 上下文
+//   - updateRequest: 更新请求参数
+//   - body: 更新数据
+//
+// 返回：
+//   - res: *proto.Response
+//   - err: 错误信息
 func (this *EvApiAdapter) EsUpdate(ctx context.Context, updateRequest proto.UpdateRequest, body interface{}) (res *proto.Response, err error) {
 	return GetEvApi().EsUpdate(ctx, dto.UpdateReq{
 		EsConnectData: this.buildEsConnectData(),
@@ -497,6 +726,15 @@ func (this *EvApiAdapter) EsUpdate(ctx context.Context, updateRequest proto.Upda
 	})
 }
 
+// EsCreate 创建ES文档
+// 参数：
+//   - ctx: 上下文
+//   - createRequest: 创建请求参数
+//   - body: 创建数据
+//
+// 返回：
+//   - res: *proto.Response
+//   - err: 错误信息
 func (this *EvApiAdapter) EsCreate(ctx context.Context, createRequest proto.CreateRequest, body interface{}) (res *proto.Response, err error) {
 	return GetEvApi().EsCreate(ctx, dto.CreateReq{
 		EsConnectData: this.buildEsConnectData(),
@@ -504,6 +742,15 @@ func (this *EvApiAdapter) EsCreate(ctx context.Context, createRequest proto.Crea
 	})
 }
 
+// EsSearch 搜索ES文档
+// 参数：
+//   - ctx: 上下文
+//   - searchRequest: 搜索请求参数
+//   - query: 搜索查询
+//
+// 返回：
+//   - res: *proto.Response
+//   - err: 错误信息
 func (this *EvApiAdapter) EsSearch(ctx context.Context, searchRequest proto.SearchRequest, query interface{}) (res *proto.Response, err error) {
 	t := time.Now()
 	defer func() {
@@ -516,6 +763,15 @@ func (this *EvApiAdapter) EsSearch(ctx context.Context, searchRequest proto.Sear
 	})
 }
 
+// EsIndicesPutSettingsRequest 设置ES索引配置
+// 参数：
+//   - ctx: 上下文
+//   - indexSettingsRequest: 索引配置请求参数
+//   - body: 配置数据
+//
+// 返回：
+//   - res: *proto.Response
+//   - err: 错误信息
 func (this *EvApiAdapter) EsIndicesPutSettingsRequest(ctx context.Context, indexSettingsRequest proto.IndicesPutSettingsRequest, body interface{}) (res *proto.Response, err error) {
 	return GetEvApi().EsIndicesPutSettingsRequest(ctx, dto.IndicesPutSettingsRequest{
 		EsConnectData:                 this.buildEsConnectData(),
@@ -523,6 +779,15 @@ func (this *EvApiAdapter) EsIndicesPutSettingsRequest(ctx context.Context, index
 	})
 }
 
+// EsCreateIndex 创建ES索引
+// 参数：
+//   - ctx: 上下文
+//   - indexCreateRequest: 创建索引请求参数
+//   - body: 索引配置数据
+//
+// 返回：
+//   - res: *proto.Response
+//   - err: 错误信息
 func (this *EvApiAdapter) EsCreateIndex(ctx context.Context, indexCreateRequest proto.IndicesCreateRequest, body interface{}) (res *proto.Response, err error) {
 	return GetEvApi().EsCreateIndex(ctx, dto.CreateIndexReq{
 		EsConnectData:      this.buildEsConnectData(),
@@ -530,6 +795,14 @@ func (this *EvApiAdapter) EsCreateIndex(ctx context.Context, indexCreateRequest 
 	})
 }
 
+// EsDeleteIndex 删除ES索引
+// 参数：
+//   - ctx: 上下文
+//   - indicesDeleteRequest: 删除索引请求参数
+//
+// 返回：
+//   - res: *proto.Response
+//   - err: 错误信息
 func (this *EvApiAdapter) EsDeleteIndex(ctx context.Context, indicesDeleteRequest proto.IndicesDeleteRequest) (res *proto.Response, err error) {
 	return GetEvApi().EsDeleteIndex(ctx, dto.DeleteIndexReq{
 		EsConnectData:      this.buildEsConnectData(),
@@ -537,6 +810,15 @@ func (this *EvApiAdapter) EsDeleteIndex(ctx context.Context, indicesDeleteReques
 	})
 }
 
+// EsReindex 重新索引ES数据
+// 参数：
+//   - ctx: 上下文
+//   - reindexRequest: 重新索引请求参数
+//   - body: 重新索引配置
+//
+// 返回：
+//   - res: *proto.Response
+//   - err: 错误信息
 func (this *EvApiAdapter) EsReindex(ctx context.Context, reindexRequest proto.ReindexRequest, body interface{}) (res *proto.Response, err error) {
 	return GetEvApi().EsReindex(ctx, dto.ReindexReq{
 		EsConnectData:  this.buildEsConnectData(),
@@ -544,6 +826,14 @@ func (this *EvApiAdapter) EsReindex(ctx context.Context, reindexRequest proto.Re
 	})
 }
 
+// EsIndicesGetSettingsRequest 获取ES索引设置
+// 参数：
+//   - ctx: 上下文
+//   - indicesGetSettingsRequest: 获取索引设置请求参数
+//
+// 返回：
+//   - res: *proto.Response
+//   - err: 错误信息
 func (this *EvApiAdapter) EsIndicesGetSettingsRequest(ctx context.Context, indicesGetSettingsRequest proto.IndicesGetSettingsRequest) (res *proto.Response, err error) {
 	return GetEvApi().EsIndicesGetSettingsRequest(ctx, dto.IndicesGetSettingsRequestReq{
 		EsConnectData:                    this.buildEsConnectData(),
@@ -551,6 +841,15 @@ func (this *EvApiAdapter) EsIndicesGetSettingsRequest(ctx context.Context, indic
 	})
 }
 
+// EsPutMapping 设置ES索引映射
+// 参数：
+//   - ctx: 上下文
+//   - indicesPutMappingRequest: 设置映射请求参数
+//   - body: 映射配置
+//
+// 返回：
+//   - res: *proto.Response
+//   - err: 错误信息
 func (this *EvApiAdapter) EsPutMapping(ctx context.Context, indicesPutMappingRequest proto.IndicesPutMappingRequest, body interface{}) (res *proto.Response, err error) {
 	return GetEvApi().EsPutMapping(ctx, dto.PutMappingReq{
 		EsConnectData:     this.buildEsConnectData(),
@@ -558,6 +857,14 @@ func (this *EvApiAdapter) EsPutMapping(ctx context.Context, indicesPutMappingReq
 	})
 }
 
+// EsGetMapping 获取ES索引映射
+// 参数：
+//   - ctx: 上下文
+//   - indexNames: 索引名称列表
+//
+// 返回：
+//   - res: *proto.Response
+//   - err: 错误信息
 func (this *EvApiAdapter) EsGetMapping(ctx context.Context, indexNames []string) (res *proto.Response, err error) {
 	return GetEvApi().EsGetMapping(ctx, dto.GetMappingReq{
 		EsConnectData:     this.buildEsConnectData(),
@@ -565,6 +872,14 @@ func (this *EvApiAdapter) EsGetMapping(ctx context.Context, indexNames []string)
 	})
 }
 
+// EsGetAliases 获取ES索引别名
+// 参数：
+//   - ctx: 上下文
+//   - indexNames: 索引名称列表
+//
+// 返回：
+//   - res: *proto.Response
+//   - err: 错误信息
 func (this *EvApiAdapter) EsGetAliases(ctx context.Context, indexNames []string) (res *proto.Response, err error) {
 	return GetEvApi().EsGetAliases(ctx, dto.GetAliasesReq{
 		EsConnectData:     this.buildEsConnectData(),
@@ -572,6 +887,15 @@ func (this *EvApiAdapter) EsGetAliases(ctx context.Context, indexNames []string)
 	})
 }
 
+// EsAddAliases 添加ES索引别名
+// 参数：
+//   - ctx: 上下文
+//   - indexName: 索引名称列表
+//   - aliasName: 别名名称
+//
+// 返回：
+//   - res: *proto.Response
+//   - err: 错误信息
 func (this *EvApiAdapter) EsAddAliases(ctx context.Context, indexName []string, aliasName string) (res *proto.Response, err error) {
 	return GetEvApi().EsAddAliases(ctx, dto.AddAliasesReq{
 		EsConnectData:     this.buildEsConnectData(),
@@ -579,6 +903,15 @@ func (this *EvApiAdapter) EsAddAliases(ctx context.Context, indexName []string, 
 	})
 }
 
+// EsRemoveAliases 移除ES索引别名
+// 参数：
+//   - ctx: 上下文
+//   - indexName: 索引名称列表
+//   - aliasName: 别名名称列表
+//
+// 返回：
+//   - res: *proto.Response
+//   - err: 错误信息
 func (this *EvApiAdapter) EsRemoveAliases(ctx context.Context, indexName []string, aliasName []string) (res *proto.Response, err error) {
 	return GetEvApi().EsRemoveAliases(ctx, dto.RemoveAliasesReq{
 		EsConnectData:        this.buildEsConnectData(),
@@ -586,6 +919,14 @@ func (this *EvApiAdapter) EsRemoveAliases(ctx context.Context, indexName []strin
 	})
 }
 
+// EsMoveToAnotherIndexAliases 将别名移动到另一个索引
+// 参数：
+//   - ctx: 上下文
+//   - body: 别名操作配置
+//
+// 返回：
+//   - res: *proto.Response
+//   - err: 错误信息
 func (this *EvApiAdapter) EsMoveToAnotherIndexAliases(ctx context.Context, body proto.AliasAction) (res *proto.Response, err error) {
 	return GetEvApi().EsMoveToAnotherIndexAliases(ctx, dto.MoveToAnotherIndexAliasesReq{
 		EsConnectData:                    this.buildEsConnectData(),
@@ -593,12 +934,27 @@ func (this *EvApiAdapter) EsMoveToAnotherIndexAliases(ctx context.Context, body 
 	})
 }
 
+// EsTaskList 获取ES任务列表
+// 参数：
+//   - ctx: 上下文
+//
+// 返回：
+//   - res: *proto.Response
+//   - err: 错误信息
 func (this *EvApiAdapter) EsTaskList(ctx context.Context) (res *proto.Response, err error) {
 	return GetEvApi().EsTaskList(ctx, dto.TaskListReq{
 		EsConnectData: this.buildEsConnectData(),
 	})
 }
 
+// EsTasksCancel 取消ES任务
+// 参数：
+//   - ctx: 上下文
+//   - taskId: 任务ID
+//
+// 返回：
+//   - res: *proto.Response
+//   - err: 错误信息
 func (this *EvApiAdapter) EsTasksCancel(ctx context.Context, taskId string) (res *proto.Response, err error) {
 	return GetEvApi().EsTasksCancel(ctx, dto.TasksCancelReq{
 		EsConnectData:      this.buildEsConnectData(),
@@ -606,6 +962,9 @@ func (this *EvApiAdapter) EsTasksCancel(ctx context.Context, taskId string) (res
 	})
 }
 
+// buildEsConnectData 构建ES连接数据
+// 返回：
+//   - dto.EsConnectData: ES连接数据对象
 func (this *EvApiAdapter) buildEsConnectData() dto.EsConnectData {
 	return dto.EsConnectData{
 		UserID:    this.UserId,

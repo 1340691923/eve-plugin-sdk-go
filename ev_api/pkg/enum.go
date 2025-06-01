@@ -9,4 +9,9 @@ const (
 	ClickHouse = "clickhouse"
 	Postgres = "postgres"
 	Mongo = "mongo"
+	Dameng = "dameng"
+	Oracle = "oracle"
+	Sqlserver = "sqlserver"
+	Mariadb = "mariadb"
+	Hive = "hive"
 )

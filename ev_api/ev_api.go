@@ -129,7 +129,7 @@ func (this *evApi) EsVersion(ctx context.Context, req dto.EsConnectData) (versio
 //   - req: Cat节点请求
 //
 // 返回：
-//   - res: Protobuf响应
+//   - res: *proto.Response
 //   - err: 错误信息
 func (this *evApi) EsCatNodes(ctx context.Context, req dto.CatNodesReq) (res *proto.Response, err error) {
 	// 发送Protobuf请求
@@ -146,7 +146,7 @@ func (this *evApi) EsCatNodes(ctx context.Context, req dto.CatNodesReq) (res *pr
 //   - req: 集群统计请求
 //
 // 返回：
-//   - res: Protobuf响应
+//   - res: *proto.Response
 //   - err: 错误信息
 func (this *evApi) EsClusterStats(ctx context.Context, req dto.ClusterStatsReq) (res *proto.Response, err error) {
 	// 发送Protobuf请求
@@ -163,7 +163,7 @@ func (this *evApi) EsClusterStats(ctx context.Context, req dto.ClusterStatsReq) 
 //   - req: 执行请求参数
 //
 // 返回：
-//   - res: Protobuf响应
+//   - res: *proto.Response
 //   - err: 错误信息
 func (this *evApi) EsPerformRequest(ctx context.Context, req dto.PerformRequest) (res *proto.Response, err error) {
 	// 发送Protobuf请求
@@ -180,7 +180,7 @@ func (this *evApi) EsPerformRequest(ctx context.Context, req dto.PerformRequest)
 //   - req: 索引分段请求
 //
 // 返回：
-//   - res: Protobuf响应
+//   - res: *proto.Response
 //   - err: 错误信息
 func (this *evApi) EsIndicesSegmentsRequest(ctx context.Context, req dto.IndicesSegmentsRequest) (res *proto.Response, err error) {
 	// 发送Protobuf请求
@@ -191,6 +191,14 @@ func (this *evApi) EsIndicesSegmentsRequest(ctx context.Context, req dto.Indices
 	return
 }
 
+// Ping 测试ES连接
+// 参数：
+//   - ctx: 上下文
+//   - req: Ping请求参数
+//
+// 返回：
+//   - res: *proto.Response
+//   - err: 错误信息
 func (this *evApi) Ping(ctx context.Context, req dto.PingReq) (res *proto.Response, err error) {
 
 	res, err = this.requestProtobuf(ctx, "api/plugin_util/Ping", req)
@@ -200,6 +208,14 @@ func (this *evApi) Ping(ctx context.Context, req dto.PingReq) (res *proto.Respon
 	return
 }
 
+// EsRefresh 刷新ES索引
+// 参数：
+//   - ctx: 上下文
+//   - req: 刷新请求参数
+//
+// 返回：
+//   - res: *proto.Response
+//   - err: 错误信息
 func (this *evApi) EsRefresh(ctx context.Context, req dto.RefreshReq) (res *proto.Response, err error) {
 
 	res, err = this.requestProtobuf(ctx, "api/plugin_util/EsRefresh", req)
@@ -209,6 +225,14 @@ func (this *evApi) EsRefresh(ctx context.Context, req dto.RefreshReq) (res *prot
 	return
 }
 
+// EsOpen 打开ES索引
+// 参数：
+//   - ctx: 上下文
+//   - req: 打开索引请求参数
+//
+// 返回：
+//   - res: *proto.Response
+//   - err: 错误信息
 func (this *evApi) EsOpen(ctx context.Context, req dto.OpenReq) (res *proto.Response, err error) {
 
 	res, err = this.requestProtobuf(ctx, "api/plugin_util/EsOpen", req)
@@ -218,6 +242,14 @@ func (this *evApi) EsOpen(ctx context.Context, req dto.OpenReq) (res *proto.Resp
 	return
 }
 
+// EsFlush 执行ES索引刷新操作
+// 参数：
+//   - ctx: 上下文
+//   - req: 刷新操作请求参数
+//
+// 返回：
+//   - res: *proto.Response
+//   - err: 错误信息
 func (this *evApi) EsFlush(ctx context.Context, req dto.FlushReq) (res *proto.Response, err error) {
 
 	res, err = this.requestProtobuf(ctx, "api/plugin_util/EsFlush", req)
@@ -227,6 +259,14 @@ func (this *evApi) EsFlush(ctx context.Context, req dto.FlushReq) (res *proto.Re
 	return
 }
 
+// EsIndicesClearCache 清除ES索引缓存
+// 参数：
+//   - ctx: 上下文
+//   - req: 清除缓存请求参数
+//
+// 返回：
+//   - res: *proto.Response
+//   - err: 错误信息
 func (this *evApi) EsIndicesClearCache(ctx context.Context, req dto.IndicesClearCacheReq) (res *proto.Response, err error) {
 
 	res, err = this.requestProtobuf(ctx, "api/plugin_util/EsIndicesClearCache", req)
@@ -236,6 +276,14 @@ func (this *evApi) EsIndicesClearCache(ctx context.Context, req dto.IndicesClear
 	return
 }
 
+// EsIndicesClose 关闭ES索引
+// 参数：
+//   - ctx: 上下文
+//   - req: 关闭索引请求参数
+//
+// 返回：
+//   - res: *proto.Response
+//   - err: 错误信息
 func (this *evApi) EsIndicesClose(ctx context.Context, req dto.IndicesCloseReq) (res *proto.Response, err error) {
 
 	res, err = this.requestProtobuf(ctx, "api/plugin_util/EsIndicesClose", req)
@@ -245,6 +293,14 @@ func (this *evApi) EsIndicesClose(ctx context.Context, req dto.IndicesCloseReq) 
 	return
 }
 
+// EsIndicesForcemerge 强制合并ES索引
+// 参数：
+//   - ctx: 上下文
+//   - req: 强制合并请求参数
+//
+// 返回：
+//   - res: *proto.Response
+//   - err: 错误信息
 func (this *evApi) EsIndicesForcemerge(ctx context.Context, req dto.IndicesForcemergeReq) (res *proto.Response, err error) {
 
 	res, err = this.requestProtobuf(ctx, "api/plugin_util/EsIndicesForcemerge", req)
@@ -254,6 +310,14 @@ func (this *evApi) EsIndicesForcemerge(ctx context.Context, req dto.IndicesForce
 	return
 }
 
+// EsDeleteByQuery 按查询条件删除ES文档
+// 参数：
+//   - ctx: 上下文
+//   - req: 按查询删除请求参数
+//
+// 返回：
+//   - res: *proto.Response
+//   - err: 错误信息
 func (this *evApi) EsDeleteByQuery(ctx context.Context, req dto.DeleteByQueryReq) (res *proto.Response, err error) {
 
 	res, err = this.requestProtobuf(ctx, "api/plugin_util/EsDeleteByQuery", req)
@@ -263,6 +327,14 @@ func (this *evApi) EsDeleteByQuery(ctx context.Context, req dto.DeleteByQueryReq
 	return
 }
 
+// EsSnapshotCreate 创建ES快照
+// 参数：
+//   - ctx: 上下文
+//   - req: 创建快照请求参数
+//
+// 返回：
+//   - res: *proto.Response
+//   - err: 错误信息
 func (this *evApi) EsSnapshotCreate(ctx context.Context, req dto.SnapshotCreateReq) (res *proto.Response, err error) {
 
 	res, err = this.requestProtobuf(ctx, "api/plugin_util/EsSnapshotCreate", req)
@@ -272,6 +344,14 @@ func (this *evApi) EsSnapshotCreate(ctx context.Context, req dto.SnapshotCreateR
 	return
 }
 
+// EsSnapshotDelete 删除ES快照
+// 参数：
+//   - ctx: 上下文
+//   - req: 删除快照请求参数
+//
+// 返回：
+//   - res: *proto.Response
+//   - err: 错误信息
 func (this *evApi) EsSnapshotDelete(ctx context.Context, req dto.SnapshotDeleteReq) (res *proto.Response, err error) {
 
 	res, err = this.requestProtobuf(ctx, "api/plugin_util/EsSnapshotDelete", req)
@@ -281,6 +361,14 @@ func (this *evApi) EsSnapshotDelete(ctx context.Context, req dto.SnapshotDeleteR
 	return
 }
 
+// EsRestoreSnapshot 恢复ES快照
+// 参数：
+//   - ctx: 上下文
+//   - req: 恢复快照请求参数
+//
+// 返回：
+//   - res: *proto.Response
+//   - err: 错误信息
 func (this *evApi) EsRestoreSnapshot(ctx context.Context, req dto.RestoreSnapshotReq) (res *proto.Response, err error) {
 
 	res, err = this.requestProtobuf(ctx, "api/plugin_util/EsRestoreSnapshot", req)
@@ -290,6 +378,14 @@ func (this *evApi) EsRestoreSnapshot(ctx context.Context, req dto.RestoreSnapsho
 	return
 }
 
+// EsSnapshotStatus 获取ES快照状态
+// 参数：
+//   - ctx: 上下文
+//   - req: 快照状态请求参数
+//
+// 返回：
+//   - res: *proto.Response
+//   - err: 错误信息
 func (this *evApi) EsSnapshotStatus(ctx context.Context, req dto.SnapshotStatusReq) (res *proto.Response, err error) {
 
 	res, err = this.requestProtobuf(ctx, "api/plugin_util/EsSnapshotStatus", req)
@@ -299,6 +395,14 @@ func (this *evApi) EsSnapshotStatus(ctx context.Context, req dto.SnapshotStatusR
 	return
 }
 
+// EsSnapshotGetRepository 获取ES快照仓库
+// 参数：
+//   - ctx: 上下文
+//   - req: 获取快照仓库请求参数
+//
+// 返回：
+//   - res: *proto.Response
+//   - err: 错误信息
 func (this *evApi) EsSnapshotGetRepository(ctx context.Context, req dto.SnapshotGetRepositoryReq) (res *proto.Response, err error) {
 
 	res, err = this.requestProtobuf(ctx, "api/plugin_util/EsSnapshotGetRepository", req)
@@ -308,6 +412,14 @@ func (this *evApi) EsSnapshotGetRepository(ctx context.Context, req dto.Snapshot
 	return
 }
 
+// EsSnapshotCreateRepository 创建ES快照仓库
+// 参数：
+//   - ctx: 上下文
+//   - req: 创建快照仓库请求参数
+//
+// 返回：
+//   - res: *proto.Response
+//   - err: 错误信息
 func (this *evApi) EsSnapshotCreateRepository(ctx context.Context, req dto.SnapshotCreateRepositoryReq) (res *proto.Response, err error) {
 	res, err = this.requestProtobuf(ctx, "api/plugin_util/EsSnapshotCreateRepository", req)
 	if err != nil {
@@ -316,6 +428,14 @@ func (this *evApi) EsSnapshotCreateRepository(ctx context.Context, req dto.Snaps
 	return
 }
 
+// EsSnapshotDeleteRepository 删除ES快照仓库
+// 参数：
+//   - ctx: 上下文
+//   - req: 删除快照仓库请求参数
+//
+// 返回：
+//   - res: *proto.Response
+//   - err: 错误信息
 func (this *evApi) EsSnapshotDeleteRepository(ctx context.Context, req dto.SnapshotDeleteRepositoryReq) (res *proto.Response, err error) {
 
 	res, err = this.requestProtobuf(ctx, "api/plugin_util/EsSnapshotDeleteRepository", req)
@@ -325,6 +445,14 @@ func (this *evApi) EsSnapshotDeleteRepository(ctx context.Context, req dto.Snaps
 	return
 }
 
+// EsGetIndices 获取ES索引列表
+// 参数：
+//   - ctx: 上下文
+//   - req: 获取索引列表请求参数
+//
+// 返回：
+//   - res: *proto.Response
+//   - err: 错误信息
 func (this *evApi) EsGetIndices(ctx context.Context, req dto.GetIndicesReq) (res *proto.Response, err error) {
 
 	res, err = this.requestProtobuf(ctx, "api/plugin_util/EsGetIndices", req)
@@ -334,6 +462,14 @@ func (this *evApi) EsGetIndices(ctx context.Context, req dto.GetIndicesReq) (res
 	return
 }
 
+// EsCatHealth 获取ES集群健康状态
+// 参数：
+//   - ctx: 上下文
+//   - req: 集群健康状态请求参数
+//
+// 返回：
+//   - res: *proto.Response
+//   - err: 错误信息
 func (this *evApi) EsCatHealth(ctx context.Context, req dto.CatHealthReq) (res *proto.Response, err error) {
 
 	res, err = this.requestProtobuf(ctx, "api/plugin_util/EsCatHealth", req)
@@ -343,6 +479,14 @@ func (this *evApi) EsCatHealth(ctx context.Context, req dto.CatHealthReq) (res *
 	return
 }
 
+// EsCatShards 获取ES分片信息
+// 参数：
+//   - ctx: 上下文
+//   - req: 分片信息请求参数
+//
+// 返回：
+//   - res: *proto.Response
+//   - err: 错误信息
 func (this *evApi) EsCatShards(ctx context.Context, req dto.CatShardsReq) (res *proto.Response, err error) {
 
 	res, err = this.requestProtobuf(ctx, "api/plugin_util/EsCatShards", req)
@@ -352,6 +496,14 @@ func (this *evApi) EsCatShards(ctx context.Context, req dto.CatShardsReq) (res *
 	return
 }
 
+// EsCatCount 获取ES索引文档数量
+// 参数：
+//   - ctx: 上下文
+//   - req: 文档数量请求参数
+//
+// 返回：
+//   - res: *proto.Response
+//   - err: 错误信息
 func (this *evApi) EsCatCount(ctx context.Context, req dto.CatCountReq) (res *proto.Response, err error) {
 
 	res, err = this.requestProtobuf(ctx, "api/plugin_util/EsCatCount", req)
@@ -361,6 +513,14 @@ func (this *evApi) EsCatCount(ctx context.Context, req dto.CatCountReq) (res *pr
 	return
 }
 
+// EsCatAllocationRequest 获取ES分片分配信息
+// 参数：
+//   - ctx: 上下文
+//   - req: 分片分配请求参数
+//
+// 返回：
+//   - res: *proto.Response
+//   - err: 错误信息
 func (this *evApi) EsCatAllocationRequest(ctx context.Context, req dto.CatAllocationRequest) (res *proto.Response, err error) {
 
 	res, err = this.requestProtobuf(ctx, "api/plugin_util/EsCatAllocationRequest", req)
@@ -370,6 +530,14 @@ func (this *evApi) EsCatAllocationRequest(ctx context.Context, req dto.CatAlloca
 	return
 }
 
+// EsCatAliases 获取ES别名信息
+// 参数：
+//   - ctx: 上下文
+//   - req: 别名信息请求参数
+//
+// 返回：
+//   - res: *proto.Response
+//   - err: 错误信息
 func (this *evApi) EsCatAliases(ctx context.Context, req dto.CatAliasesReq) (res *proto.Response, err error) {
 
 	res, err = this.requestProtobuf(ctx, "api/plugin_util/EsCatAliases", req)
@@ -379,6 +547,14 @@ func (this *evApi) EsCatAliases(ctx context.Context, req dto.CatAliasesReq) (res
 	return
 }
 
+// EsDelete 删除ES文档
+// 参数：
+//   - ctx: 上下文
+//   - req: 删除文档请求参数
+//
+// 返回：
+//   - res: *proto.Response
+//   - err: 错误信息
 func (this *evApi) EsDelete(ctx context.Context, req dto.DeleteReq) (res *proto.Response, err error) {
 
 	res, err = this.requestProtobuf(ctx, "api/plugin_util/EsDelete", req)
@@ -388,6 +564,14 @@ func (this *evApi) EsDelete(ctx context.Context, req dto.DeleteReq) (res *proto.
 	return
 }
 
+// EsUpdate 更新ES文档
+// 参数：
+//   - ctx: 上下文
+//   - req: 更新文档请求参数
+//
+// 返回：
+//   - res: *proto.Response
+//   - err: 错误信息
 func (this *evApi) EsUpdate(ctx context.Context, req dto.UpdateReq) (res *proto.Response, err error) {
 
 	res, err = this.requestProtobuf(ctx, "api/plugin_util/EsUpdate", req)
@@ -397,6 +581,14 @@ func (this *evApi) EsUpdate(ctx context.Context, req dto.UpdateReq) (res *proto.
 	return
 }
 
+// EsCreate 创建ES文档
+// 参数：
+//   - ctx: 上下文
+//   - req: 创建文档请求参数
+//
+// 返回：
+//   - res: *proto.Response
+//   - err: 错误信息
 func (this *evApi) EsCreate(ctx context.Context, req dto.CreateReq) (res *proto.Response, err error) {
 
 	res, err = this.requestProtobuf(ctx, "api/plugin_util/EsCreate", req)
@@ -406,11 +598,27 @@ func (this *evApi) EsCreate(ctx context.Context, req dto.CreateReq) (res *proto.
 	return
 }
 
+// EsSearch 搜索ES文档
+// 参数：
+//   - ctx: 上下文
+//   - req: 搜索请求参数
+//
+// 返回：
+//   - res: *proto.Response
+//   - err: 错误信息
 func (this *evApi) EsSearch(ctx context.Context, req dto.SearchReq) (res *proto.Response, err error) {
 
 	return this.requestProtobuf(ctx, "api/plugin_util/EsSearch", req)
 }
 
+// EsIndicesPutSettingsRequest 设置ES索引配置
+// 参数：
+//   - ctx: 上下文
+//   - req: 索引配置请求参数
+//
+// 返回：
+//   - res: *proto.Response
+//   - err: 错误信息
 func (this *evApi) EsIndicesPutSettingsRequest(ctx context.Context, req dto.IndicesPutSettingsRequest) (res *proto.Response, err error) {
 
 	res, err = this.requestProtobuf(ctx, "api/plugin_util/EsIndicesPutSettingsRequest", req)
@@ -420,6 +628,14 @@ func (this *evApi) EsIndicesPutSettingsRequest(ctx context.Context, req dto.Indi
 	return
 }
 
+// EsCreateIndex 创建ES索引
+// 参数：
+//   - ctx: 上下文
+//   - req: 创建索引请求参数
+//
+// 返回：
+//   - res: *proto.Response
+//   - err: 错误信息
 func (this *evApi) EsCreateIndex(ctx context.Context, req dto.CreateIndexReq) (res *proto.Response, err error) {
 
 	res, err = this.requestProtobuf(ctx, "api/plugin_util/EsCreateIndex", req)
@@ -429,6 +645,14 @@ func (this *evApi) EsCreateIndex(ctx context.Context, req dto.CreateIndexReq) (r
 	return
 }
 
+// EsDeleteIndex 删除ES索引
+// 参数：
+//   - ctx: 上下文
+//   - req: 删除索引请求参数
+//
+// 返回：
+//   - res: *proto.Response
+//   - err: 错误信息
 func (this *evApi) EsDeleteIndex(ctx context.Context, req dto.DeleteIndexReq) (res *proto.Response, err error) {
 
 	res, err = this.requestProtobuf(ctx, "api/plugin_util/EsDeleteIndex", req)
@@ -438,6 +662,14 @@ func (this *evApi) EsDeleteIndex(ctx context.Context, req dto.DeleteIndexReq) (r
 	return
 }
 
+// EsReindex 重新索引ES数据
+// 参数：
+//   - ctx: 上下文
+//   - req: 重新索引请求参数
+//
+// 返回：
+//   - res: *proto.Response
+//   - err: 错误信息
 func (this *evApi) EsReindex(ctx context.Context, req dto.ReindexReq) (res *proto.Response, err error) {
 
 	res, err = this.requestProtobuf(ctx, "api/plugin_util/EsReindex", req)
@@ -447,6 +679,14 @@ func (this *evApi) EsReindex(ctx context.Context, req dto.ReindexReq) (res *prot
 	return
 }
 
+// EsIndicesGetSettingsRequest 获取ES索引配置
+// 参数：
+//   - ctx: 上下文
+//   - req: 获取索引配置请求参数
+//
+// 返回：
+//   - res: *proto.Response
+//   - err: 错误信息
 func (this *evApi) EsIndicesGetSettingsRequest(ctx context.Context, req dto.IndicesGetSettingsRequestReq) (res *proto.Response, err error) {
 
 	res, err = this.requestProtobuf(ctx, "api/plugin_util/EsIndicesGetSettingsRequest", req)
@@ -456,6 +696,14 @@ func (this *evApi) EsIndicesGetSettingsRequest(ctx context.Context, req dto.Indi
 	return
 }
 
+// EsPutMapping 设置ES索引映射
+// 参数：
+//   - ctx: 上下文
+//   - req: 设置映射请求参数
+//
+// 返回：
+//   - res: *proto.Response
+//   - err: 错误信息
 func (this *evApi) EsPutMapping(ctx context.Context, req dto.PutMappingReq) (res *proto.Response, err error) {
 
 	res, err = this.requestProtobuf(ctx, "api/plugin_util/EsPutMapping", req)
@@ -465,6 +713,14 @@ func (this *evApi) EsPutMapping(ctx context.Context, req dto.PutMappingReq) (res
 	return
 }
 
+// EsGetMapping 获取ES索引映射
+// 参数：
+//   - ctx: 上下文
+//   - req: 获取映射请求参数
+//
+// 返回：
+//   - res: *proto.Response
+//   - err: 错误信息
 func (this *evApi) EsGetMapping(ctx context.Context, req dto.GetMappingReq) (res *proto.Response, err error) {
 
 	res, err = this.requestProtobuf(ctx, "api/plugin_util/EsGetMapping", req)
@@ -474,6 +730,14 @@ func (this *evApi) EsGetMapping(ctx context.Context, req dto.GetMappingReq) (res
 	return
 }
 
+// EsGetAliases 获取ES别名
+// 参数：
+//   - ctx: 上下文
+//   - req: 获取别名请求参数
+//
+// 返回：
+//   - res: *proto.Response
+//   - err: 错误信息
 func (this *evApi) EsGetAliases(ctx context.Context, req dto.GetAliasesReq) (res *proto.Response, err error) {
 
 	res, err = this.requestProtobuf(ctx, "api/plugin_util/EsGetAliases", req)
@@ -483,6 +747,14 @@ func (this *evApi) EsGetAliases(ctx context.Context, req dto.GetAliasesReq) (res
 	return
 }
 
+// EsAddAliases 添加ES别名
+// 参数：
+//   - ctx: 上下文
+//   - req: 添加别名请求参数
+//
+// 返回：
+//   - res: *proto.Response
+//   - err: 错误信息
 func (this *evApi) EsAddAliases(ctx context.Context, req dto.AddAliasesReq) (res *proto.Response, err error) {
 
 	res, err = this.requestProtobuf(ctx, "api/plugin_util/EsAddAliases", req)
@@ -492,6 +764,14 @@ func (this *evApi) EsAddAliases(ctx context.Context, req dto.AddAliasesReq) (res
 	return
 }
 
+// EsRemoveAliases 移除ES别名
+// 参数：
+//   - ctx: 上下文
+//   - req: 移除别名请求参数
+//
+// 返回：
+//   - res: *proto.Response
+//   - err: 错误信息
 func (this *evApi) EsRemoveAliases(ctx context.Context, req dto.RemoveAliasesReq) (res *proto.Response, err error) {
 
 	res, err = this.requestProtobuf(ctx, "api/plugin_util/EsRemoveAliases", req)
@@ -501,6 +781,14 @@ func (this *evApi) EsRemoveAliases(ctx context.Context, req dto.RemoveAliasesReq
 	return
 }
 
+// EsMoveToAnotherIndexAliases 将别名移动到另一个索引
+// 参数：
+//   - ctx: 上下文
+//   - req: 移动别名请求参数
+//
+// 返回：
+//   - res: *proto.Response
+//   - err: 错误信息
 func (this *evApi) EsMoveToAnotherIndexAliases(ctx context.Context, req dto.MoveToAnotherIndexAliasesReq) (res *proto.Response, err error) {
 
 	res, err = this.requestProtobuf(ctx, "api/plugin_util/EsMoveToAnotherIndexAliases", req)
@@ -510,6 +798,14 @@ func (this *evApi) EsMoveToAnotherIndexAliases(ctx context.Context, req dto.Move
 	return
 }
 
+// EsTaskList 获取ES任务列表
+// 参数：
+//   - ctx: 上下文
+//   - req: 任务列表请求参数
+//
+// 返回：
+//   - res: *proto.Response
+//   - err: 错误信息
 func (this *evApi) EsTaskList(ctx context.Context, req dto.TaskListReq) (res *proto.Response, err error) {
 
 	res, err = this.requestProtobuf(ctx, "api/plugin_util/EsTaskList", req)
@@ -519,6 +815,14 @@ func (this *evApi) EsTaskList(ctx context.Context, req dto.TaskListReq) (res *pr
 	return
 }
 
+// EsTasksCancel 取消ES任务
+// 参数：
+//   - ctx: 上下文
+//   - req: 取消任务请求参数
+//
+// 返回：
+//   - res: *proto.Response
+//   - err: 错误信息
 func (this *evApi) EsTasksCancel(ctx context.Context, req dto.TasksCancelReq) (res *proto.Response, err error) {
 
 	res, err = this.requestProtobuf(ctx, "api/plugin_util/EsTasksCancel", req)
@@ -528,7 +832,15 @@ func (this *evApi) EsTasksCancel(ctx context.Context, req dto.TasksCancelReq) (r
 	return
 }
 
-// 执行sql
+// StoreExec 执行SQL语句
+// 参数：
+//   - ctx: 上下文
+//   - sql: SQL语句
+//   - args: SQL参数
+//
+// 返回：
+//   - rowsAffected: 影响的行数
+//   - err: 错误信息
 func (this *evApi) StoreExec(ctx context.Context, sql string, args ...interface{}) (rowsAffected int64, err error) {
 	data := &vo.ExecSqlRes{}
 	err = this.request(ctx, "api/plugin_util/ExecSql", &dto.ExecSqlReq{PluginId: this.pluginId, Sql: sql, Args: args}, &vo.ApiCommonRes{Data: data})
@@ -538,7 +850,13 @@ func (this *evApi) StoreExec(ctx context.Context, sql string, args ...interface{
 	return data.RowsAffected, nil
 }
 
-// 执行sql
+// StoreMoreExec 批量执行多条SQL语句
+// 参数：
+//   - ctx: 上下文
+//   - sqls: SQL语句列表
+//
+// 返回：
+//   - err: 错误信息
 func (this *evApi) StoreMoreExec(ctx context.Context, sqls []dto.ExecSql) (err error) {
 	err = this.request(ctx, "api/plugin_util/ExecMoreSql", &dto.ExecMoreReq{PluginId: this.pluginId, Sqls: sqls}, &vo.ApiCommonRes{})
 	if err != nil {
@@ -547,6 +865,13 @@ func (this *evApi) StoreMoreExec(ctx context.Context, sqls []dto.ExecSql) (err e
 	return nil
 }
 
+// LiveBroadcastEvMsg2All 向所有用户广播EVE消息
+// 参数：
+//   - ctx: 上下文
+//   - notice: 通知数据
+//
+// 返回：
+//   - err: 错误信息
 func (this *evApi) LiveBroadcastEvMsg2All(ctx context.Context, notice *dto.NoticeData) (err error) {
 	err = notice.Validate()
 	if err != nil {
@@ -562,6 +887,14 @@ func (this *evApi) LiveBroadcastEvMsg2All(ctx context.Context, notice *dto.Notic
 	return nil
 }
 
+// LiveBroadcastEvMsg2Roles 向指定角色广播EVE消息
+// 参数：
+//   - ctx: 上下文
+//   - notice: 通知数据
+//   - roleIds: 角色ID列表
+//
+// 返回：
+//   - err: 错误信息
 func (this *evApi) LiveBroadcastEvMsg2Roles(ctx context.Context, notice *dto.NoticeData, roleIds []int) (err error) {
 	err = notice.Validate()
 	if err != nil {
@@ -577,6 +910,14 @@ func (this *evApi) LiveBroadcastEvMsg2Roles(ctx context.Context, notice *dto.Not
 	return nil
 }
 
+// LiveBroadcastEvMsg2Users 向指定用户广播EVE消息
+// 参数：
+//   - ctx: 上下文
+//   - notice: 通知数据
+//   - userIds: 用户ID列表
+//
+// 返回：
+//   - err: 错误信息
 func (this *evApi) LiveBroadcastEvMsg2Users(ctx context.Context, notice *dto.NoticeData, userIds []int) (err error) {
 	err = notice.Validate()
 	if err != nil {
@@ -590,6 +931,14 @@ func (this *evApi) LiveBroadcastEvMsg2Users(ctx context.Context, notice *dto.Not
 	return nil
 }
 
+// StoreSave 保存数据到数据库
+// 参数：
+//   - ctx: 上下文
+//   - table: 表名
+//   - data: 要保存的数据
+//
+// 返回：
+//   - err: 错误信息
 func (this *evApi) StoreSave(ctx context.Context, table string, data interface{}) (err error) {
 	err = this.request(ctx, "api/plugin_util/SaveDb", &dto.SaveDb{PluginId: this.pluginId, TableName: table, Data: data}, &vo.ApiCommonRes{})
 	if err != nil {
@@ -598,6 +947,17 @@ func (this *evApi) StoreSave(ctx context.Context, table string, data interface{}
 	return nil
 }
 
+// StoreUpdate 更新数据库记录
+// 参数：
+//   - ctx: 上下文
+//   - table: 表名
+//   - updateData: 更新的数据
+//   - whereSql: WHERE条件SQL
+//   - whereArgs: WHERE条件参数
+//
+// 返回：
+//   - rowsAffected: 影响的行数
+//   - err: 错误信息
 func (this *evApi) StoreUpdate(ctx context.Context, table string, updateData map[string]interface{}, whereSql string, whereArgs ...interface{}) (rowsAffected int64, err error) {
 	data := &vo.ExecSqlRes{}
 	err = this.request(ctx, "api/plugin_util/UpdateDb",
@@ -608,6 +968,16 @@ func (this *evApi) StoreUpdate(ctx context.Context, table string, updateData map
 	return data.RowsAffected, nil
 }
 
+// StoreDelete 删除数据库记录
+// 参数：
+//   - ctx: 上下文
+//   - tableName: 表名
+//   - whereSql: WHERE条件SQL
+//   - whereArgs: WHERE条件参数
+//
+// 返回：
+//   - rowsAffected: 影响的行数
+//   - err: 错误信息
 func (this *evApi) StoreDelete(ctx context.Context, tableName, whereSql string, whereArgs ...interface{}) (rowsAffected int64, err error) {
 	data := &vo.ExecSqlRes{}
 	err = this.request(ctx, "api/plugin_util/DeleteDb",
@@ -618,6 +988,15 @@ func (this *evApi) StoreDelete(ctx context.Context, tableName, whereSql string, 
 	return data.RowsAffected, nil
 }
 
+// StoreInsertOrUpdate 插入或更新数据库记录
+// 参数：
+//   - ctx: 上下文
+//   - table: 表名
+//   - upsertData: 插入或更新的数据
+//   - uniqueKeys: 唯一键字段
+//
+// 返回：
+//   - err: 错误信息
 func (this *evApi) StoreInsertOrUpdate(ctx context.Context, table string, upsertData map[string]interface{}, uniqueKeys ...string) (err error) {
 	err = this.request(ctx, "api/plugin_util/InsertOrUpdateDb",
 		&dto.InsertOrUpdateDb{PluginId: this.pluginId, TableName: table, UpsertData: upsertData, UniqueKeys: uniqueKeys}, &vo.ApiCommonRes{})
@@ -627,8 +1006,16 @@ func (this *evApi) StoreInsertOrUpdate(ctx context.Context, table string, upsert
 	return nil
 }
 
+// LiveBroadcast 实时广播消息到指定频道
+// 参数：
+//   - ctx: 上下文
+//   - channel: 频道名
+//   - data: 广播数据
+//
+// 返回：
+//   - noSub: 是否无订阅者
+//   - err: 错误信息
 func (this *evApi) LiveBroadcast(ctx context.Context, channel string, data interface{}) (noSub bool, err error) {
-
 	err = this.request(ctx, "api/plugin_util/LiveBroadcast", map[string]interface{}{
 		"channel": this.pluginId + "$v$" + channel,
 		"data":    data,
@@ -642,6 +1029,15 @@ func (this *evApi) LiveBroadcast(ctx context.Context, channel string, data inter
 	return false, nil
 }
 
+// BatchLiveBroadcast 批量实时广播消息到指定频道
+// 参数：
+//   - ctx: 上下文
+//   - channel: 频道名
+//   - datas: 广播数据列表
+//
+// 返回：
+//   - noSub: 是否无订阅者
+//   - err: 错误信息
 func (this *evApi) BatchLiveBroadcast(ctx context.Context, channel string, datas ...interface{}) (noSub bool, err error) {
 
 	channel = this.pluginId + "$v$" + channel
@@ -661,6 +1057,13 @@ func (this *evApi) BatchLiveBroadcast(ctx context.Context, channel string, datas
 	return false, nil
 }
 
+// GetEveToken 获取EVE令牌
+// 参数：
+//   - ctx: 上下文
+//
+// 返回：
+//   - token: EVE令牌
+//   - err: 错误信息
 func (this *evApi) GetEveToken(ctx context.Context) (token string, err error) {
 
 	res := &vo.ApiCommonRes{Data: ""}
@@ -672,7 +1075,15 @@ func (this *evApi) GetEveToken(ctx context.Context) (token string, err error) {
 	return cast.ToString(res.Data), nil
 }
 
-// 查询索引 dist参数必须是一个切片
+// StoreSelect 查询数据库记录，dest参数必须是一个切片
+// 参数：
+//   - ctx: 上下文
+//   - dest: 查询结果目标对象
+//   - sql: SQL查询语句
+//   - args: SQL查询参数
+//
+// 返回：
+//   - err: 错误信息
 func (this *evApi) StoreSelect(ctx context.Context, dest interface{}, sql string, args ...interface{}) (err error) {
 	data := &vo.SelectRes{}
 	data.Result = &dest
@@ -684,7 +1095,14 @@ func (this *evApi) StoreSelect(ctx context.Context, dest interface{}, sql string
 	return nil
 }
 
-// 查询索引 dist参数必须是一个切片
+// GetRoles4UserID 根据用户ID获取角色列表
+// 参数：
+//   - ctx: 上下文
+//   - userId: 用户ID
+//
+// 返回：
+//   - roleIds: 角色ID列表
+//   - err: 错误信息
 func (this *evApi) GetRoles4UserID(ctx context.Context, userId int) (roleIds []int, err error) {
 	data := &vo.GetRoles4UserIdRes{}
 	err = this.request(ctx, "api/plugin_util/GetRoles4UserID",
@@ -695,6 +1113,15 @@ func (this *evApi) GetRoles4UserID(ctx context.Context, userId int) (roleIds []i
 	return data.RoleIds, nil
 }
 
+// StoreFirst 查询数据库第一条记录
+// 参数：
+//   - ctx: 上下文
+//   - dest: 查询结果目标对象
+//   - sql: SQL查询语句
+//   - args: SQL查询参数
+//
+// 返回：
+//   - err: 错误信息
 func (this *evApi) StoreFirst(ctx context.Context, dest interface{}, sql string, args ...interface{}) (err error) {
 	data := &vo.SelectRes{}
 	data.Result = &dest
@@ -705,6 +1132,13 @@ func (this *evApi) StoreFirst(ctx context.Context, dest interface{}, sql string,
 	return nil
 }
 
+// LoadDebugPlugin 加载调试插件
+// 参数：
+//   - ctx: 上下文
+//   - req: 加载调试插件请求
+//
+// 返回：
+//   - err: 错误信息
 func (this *evApi) LoadDebugPlugin(ctx context.Context, req *dto.LoadDebugPlugin) (err error) {
 	err = this.request(ctx, "api/plugin_util/LoadDebugPlugin", req, &vo.ApiCommonRes{})
 	if err != nil {
@@ -713,6 +1147,13 @@ func (this *evApi) LoadDebugPlugin(ctx context.Context, req *dto.LoadDebugPlugin
 	return nil
 }
 
+// StopDebugPlugin 停止调试插件
+// 参数：
+//   - ctx: 上下文
+//   - req: 停止调试插件请求
+//
+// 返回：
+//   - err: 错误信息
 func (this *evApi) StopDebugPlugin(ctx context.Context, req *dto.StopDebugPlugin) (err error) {
 	err = this.request(ctx, "api/plugin_util/LoadDebugPlugin", req, &vo.ApiCommonRes{})
 	if err != nil {
@@ -721,6 +1162,14 @@ func (this *evApi) StopDebugPlugin(ctx context.Context, req *dto.StopDebugPlugin
 	return nil
 }
 
+// EsRunDsl 执行ES DSL查询
+// 参数：
+//   - ctx: 上下文
+//   - req: DSL查询请求
+//
+// 返回：
+//   - res: *proto.Response
+//   - err: 错误信息
 func (this *evApi) EsRunDsl(ctx context.Context, req *dto.PluginRunDsl) (res *proto.Response, err error) {
 
 	if req.Params != nil {
@@ -730,8 +1179,14 @@ func (this *evApi) EsRunDsl(ctx context.Context, req *dto.PluginRunDsl) (res *pr
 	return this.requestProtobuf(ctx, "api/plugin_util/EsRunDsl", req)
 }
 
-// MysqlExecSql MysqlSelectSql  MysqlFirstSql
-// 执行sql
+// MysqlExecSql 执行MySQL SQL语句
+// 参数：
+//   - ctx: 上下文
+//   - req: MySQL执行请求
+//
+// 返回：
+//   - rowsAffected: 影响的行数
+//   - err: 错误信息
 func (this *evApi) MysqlExecSql(ctx context.Context, req *dto.MysqlExecReq) (rowsAffected int64, err error) {
 	data := &vo.MysqlExecSqlRes{}
 	err = this.request(ctx, "api/plugin_util/MysqlExecSql", req, &vo.ApiCommonRes{Data: data})
@@ -741,7 +1196,15 @@ func (this *evApi) MysqlExecSql(ctx context.Context, req *dto.MysqlExecReq) (row
 	return data.RowsAffected, nil
 }
 
-// 查询索引 dist参数必须是一个切片
+// MysqlSelectSql 查询MySQL数据，返回列名和结果
+// 参数：
+//   - ctx: 上下文
+//   - req: MySQL查询请求
+//
+// 返回：
+//   - columns: 列名列表
+//   - result: 查询结果
+//   - err: 错误信息
 func (this *evApi) MysqlSelectSql(ctx context.Context, req *dto.MysqlSelectReq) (columns []string, result []map[string]interface{}, err error) {
 	data := &vo.MysqlSelectSqlRes{}
 	err = this.request(ctx, "api/plugin_util/MysqlSelectSql", req, &vo.ApiCommonRes{Data: data}, true)
@@ -751,6 +1214,14 @@ func (this *evApi) MysqlSelectSql(ctx context.Context, req *dto.MysqlSelectReq) 
 	return data.Columns, data.Result, nil
 }
 
+// MysqlFirstSql 查询MySQL第一条记录
+// 参数：
+//   - ctx: 上下文
+//   - req: MySQL查询请求
+//
+// 返回：
+//   - result: 查询结果
+//   - err: 错误信息
 func (this *evApi) MysqlFirstSql(ctx context.Context, req *dto.MysqlSelectReq) (result map[string]interface{}, err error) {
 	data := &vo.MysqlFirstSqlRes{}
 	err = this.request(ctx, "api/plugin_util/MysqlFirstSql", req, &vo.ApiCommonRes{Data: data}, true)
@@ -760,6 +1231,14 @@ func (this *evApi) MysqlFirstSql(ctx context.Context, req *dto.MysqlSelectReq) (
 	return data.Result, nil
 }
 
+// RedisExecCommand 执行Redis命令
+// 参数：
+//   - ctx: 上下文
+//   - req: Redis执行请求
+//
+// 返回：
+//   - data: 执行结果
+//   - err: 错误信息
 func (this *evApi) RedisExecCommand(ctx context.Context, req *dto.RedisExecReq) (data interface{}, err error) {
 
 	result, err := this.requestProtobuf(ctx, "api/plugin_util/RedisExecCommand", req)
@@ -782,6 +1261,14 @@ func (this *evApi) RedisExecCommand(ctx context.Context, req *dto.RedisExecReq) 
 	return res["data"], nil
 }
 
+// ExecMongoCommand 执行MongoDB命令
+// 参数：
+//   - ctx: 上下文
+//   - req: MongoDB执行请求
+//
+// 返回：
+//   - data: 执行结果
+//   - err: 错误信息
 func (this *evApi) ExecMongoCommand(ctx context.Context, req *dto.MongoExecReq) (data bson.M, err error) {
 
 	res, err := this.requestProtobuf(ctx, "api/plugin_util/MongoExecCommand", req)
@@ -803,6 +1290,14 @@ func (this *evApi) ExecMongoCommand(ctx context.Context, req *dto.MongoExecReq) 
 	return data, nil
 }
 
+// ShowMongoDbs 显示MongoDB数据库列表
+// 参数：
+//   - ctx: 上下文
+//   - req: 显示数据库请求
+//
+// 返回：
+//   - dbList: 数据库名称列表
+//   - err: 错误信息
 func (this *evApi) ShowMongoDbs(ctx context.Context, req *dto.ShowMongoDbsReq) (dbList []string, err error) {
 	res := &vo.ApiCommonRes{Data: dbList}
 	err = this.request(ctx, "api/plugin_util/ShowMongoDbs", req, res)
@@ -813,6 +1308,16 @@ func (this *evApi) ShowMongoDbs(ctx context.Context, req *dto.ShowMongoDbsReq) (
 	return cast.ToStringSlice(res.Data), nil
 }
 
+// request 发送HTTP请求的内部方法
+// 参数：
+//   - ctx: 上下文
+//   - api: API路径
+//   - requestData: 请求数据
+//   - result: 响应结果
+//   - nativeParse: 是否使用原生JSON解析
+//
+// 返回：
+//   - error: 错误信息
 func (this *evApi) request(ctx context.Context, api API, requestData interface{}, result interface{}, nativeParse ...bool) error {
 	var requestDataJSON = []byte(`{}`)
 	if requestData != nil {
@@ -848,6 +1353,15 @@ func (this *evApi) request(ctx context.Context, api API, requestData interface{}
 	return nil
 }
 
+// requestProtobuf 发送Protobuf格式HTTP请求的内部方法
+// 参数：
+//   - ctx: 上下文
+//   - api: API路径
+//   - requestData: 请求数据
+//
+// 返回：
+//   - result: *proto.Response
+//   - err: 错误信息
 func (this *evApi) requestProtobuf(ctx context.Context, api API, requestData interface{}) (result *proto.Response, err error) {
 
 	requestDataJSON, err := json2.Marshal(requestData)
@@ -898,6 +1412,16 @@ func (this *evApi) requestProtobuf(ctx context.Context, api API, requestData int
 	return result, err
 }
 
+// SendRequest 发送HTTP请求的底层方法
+// 参数：
+//   - ctx: 上下文
+//   - api: API路径
+//   - method: HTTP方法
+//   - requestDataJSON: JSON格式请求数据
+//
+// 返回：
+//   - []byte: 响应数据
+//   - error: 错误信息
 func (this *evApi) SendRequest(ctx context.Context, api API, method string, requestDataJSON []byte) ([]byte, error) {
 	// 构建请求对象
 	req := fasthttp.AcquireRequest()
@@ -944,6 +1468,7 @@ func (this *evApi) SendRequest(ctx context.Context, api API, method string, requ
 	return resp.Body(), nil
 }
 
+// PluginRequestOptions 插件请求选项配置
 type PluginRequestOptions struct {
 	QueryParams url.Values        // URL 查询参数
 	Headers     map[string]string // 自定义 Headers（包含 Content-Type）
@@ -951,6 +1476,18 @@ type PluginRequestOptions struct {
 	UserId      int               //当前操作者id
 }
 
+// CallPlugin 调用其他插件的API
+// 参数：
+//   - ctx: 上下文
+//   - pluginAlias: 插件别名
+//   - api: API路径
+//   - method: HTTP方法
+//   - body: 请求体
+//   - opts: 请求选项
+//
+// 返回：
+//   - []byte: 响应数据
+//   - error: 错误信息
 func (this *evApi) CallPlugin(
 	ctx context.Context,
 	pluginAlias string,
