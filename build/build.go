@@ -29,9 +29,9 @@ import (
 )
 
 // BuildPluginSvr 构建插件服务器
-func BuildPluginSvr(pluginJsonFile string) (err error) {
+func BuildPluginSvr(pluginJsonFile string,isUpx bool) (err error) {
 	// 调用内部构建函数
-	err = buildPluginSvr(pluginJsonFile)
+	err = buildPluginSvr(pluginJsonFile,isUpx)
 	// 重置环境变量
 	resetEnv()
 	// 如果构建失败，打印错误信息
@@ -51,10 +51,12 @@ type Build struct {
 	MainGoFile string
 	// 插件别名
 	PluginAlias string
+	IsUpx bool
 }
 
 // BuildConfig 定义构建配置结构体
 type BuildConfig struct {
+	IsUpx bool
 	// 操作系统
 	OS string // GOOS
 	// 架构
@@ -118,11 +120,11 @@ func buildBackend(cfg BuildConfig) error {
 	cfg.Env["GOOS"] = cfg.OS
 	cfg.Env["GOARCH"] = cfg.GOARCH
 	// 执行Go构建
-	return RunGoBuild(cfg.Env, args...)
+	return RunGoBuild(cfg.IsUpx,cfg.Env, args...)
 }
 
 // newBuildConfig 创建新的构建配置
-func newBuildConfig(os, arch, evVersion, mainGoFile, pluginAlias string) BuildConfig {
+func newBuildConfig(os, arch, evVersion, mainGoFile, pluginAlias string,isUpx bool ) BuildConfig {
 	// 返回初始化的构建配置
 	return BuildConfig{
 		OS:          os,
@@ -132,6 +134,7 @@ func newBuildConfig(os, arch, evVersion, mainGoFile, pluginAlias string) BuildCo
 		Env:         map[string]string{},
 		MainGoFile:  mainGoFile,
 		PluginAlias: pluginAlias,
+		IsUpx: isUpx,
 	}
 }
 
@@ -139,35 +142,35 @@ func newBuildConfig(os, arch, evVersion, mainGoFile, pluginAlias string) BuildCo
 func (this *Build) LinuxArm64() error {
 	// 使用newBuildConfig创建构建配置并执行buildBackend
 	return buildBackend(newBuildConfig("linux", "arm64",
-		this.EvVersion, this.MainGoFile, this.PluginAlias))
+		this.EvVersion, this.MainGoFile, this.PluginAlias,this.IsUpx))
 }
 
 // LinuxAmd64 构建Linux AMD64架构的插件
 func (this *Build) LinuxAmd64() error {
 	// 使用newBuildConfig创建构建配置并执行buildBackend
 	return buildBackend(newBuildConfig("linux", "amd64",
-		this.EvVersion, this.MainGoFile, this.PluginAlias))
+		this.EvVersion, this.MainGoFile, this.PluginAlias,this.IsUpx))
 }
 
 // WindowsAmd64 构建Windows AMD64架构的插件
 func (this *Build) WindowsAmd64() error {
 	// 使用newBuildConfig创建构建配置并执行buildBackend
 	return buildBackend(newBuildConfig("windows", "amd64",
-		this.EvVersion, this.MainGoFile, this.PluginAlias))
+		this.EvVersion, this.MainGoFile, this.PluginAlias,this.IsUpx))
 }
 
 // DarwinAmd64 构建macOS AMD64架构的插件
 func (this *Build) DarwinAmd64() error {
 	// 使用newBuildConfig创建构建配置并执行buildBackend
 	return buildBackend(newBuildConfig("darwin", "amd64",
-		this.EvVersion, this.MainGoFile, this.PluginAlias))
+		this.EvVersion, this.MainGoFile, this.PluginAlias,this.IsUpx))
 }
 
 // DarwinArm64 构建macOS ARM64架构的插件
 func (this *Build) DarwinArm64() error {
 	// 使用newBuildConfig创建构建配置并执行buildBackend
 	return buildBackend(newBuildConfig("darwin", "arm64",
-		this.EvVersion, this.MainGoFile, this.PluginAlias))
+		this.EvVersion, this.MainGoFile, this.PluginAlias,this.IsUpx))
 }
 
 // resetEnv 重置环境变量
@@ -185,7 +188,7 @@ func resetEnv() {
 }
 
 // buildPluginSvr 构建插件服务器的内部实现
-func buildPluginSvr(pluginJsonFile string) (err error) {
+func buildPluginSvr(pluginJsonFile string,isUpx bool) (err error) {
 	// 初始化插件数据结构
 	var pluginData PluginJsonData
 	// 从JSON文件加载插件配置
@@ -225,6 +228,7 @@ func buildPluginSvr(pluginJsonFile string) (err error) {
 		EvVersion:   version,
 		MainGoFile:  pluginData.MainGoFile,
 		PluginAlias: pluginData.PluginAlias,
+		IsUpx: isUpx,
 	}
 
 	// 创建错误函数运行器
@@ -315,7 +319,7 @@ func setEnv(env map[string]string) (err error) {
 }
 
 // RunGoBuild 运行Go构建命令
-func RunGoBuild(env map[string]string, args ...string) (err error) {
+func RunGoBuild(isUpx bool,env map[string]string, args ...string) (err error) {
 	// 设置环境变量
 	if err = setEnv(env); err != nil {
 		return
@@ -327,6 +331,17 @@ func RunGoBuild(env map[string]string, args ...string) (err error) {
 	cmd := exec.Command("go", args...)
 	// 执行命令
 	err = cmd.Run()
+
+	if err!=nil{
+		return
+	}
+
+	if isUpx{
+		fmt.Println(fmt.Sprintf("start cmd %s %s %s", "upx", "--best", args[2]))
+		cmd = exec.Command("upx", "--best", args[2])
+		err = cmd.Run()
+	}
+
 	return
 }
 
