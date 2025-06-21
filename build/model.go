@@ -27,7 +27,7 @@ type PluginJsonData struct {
 	// 前端2c模式开关
 	Frontend2c bool `json:"frontend_2c"`
 	// 后端路由配置
-	BackendRoutes []*BackendRoute `json:"backend_routes"`
+	BackendRoutes []*BackendRoute `json:"backend_routes,omitempty"`
 }
 
 // BackendRoute 定义后端路由结构
