@@ -49,7 +49,7 @@ type Route struct {
 	// 路由元数据
 	Meta *RouteMeta `json:"meta"`
 	// 子路由
-	Children []*Route `json:"children"`
+	Children []*Route `json:"children,omitempty"`
 }
 
 // RouteMeta 定义路由元数据结构

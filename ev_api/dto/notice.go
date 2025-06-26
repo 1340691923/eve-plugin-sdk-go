@@ -12,6 +12,7 @@ type NoticeBtnJumpType = string
 const (
 	NoticeBtnJumpTypeInternal NoticeBtnJumpType = "internal"
 	NoticeBtnJumpTypeRemote   NoticeBtnJumpType = "remote"
+	NoticeBtnJumpTypeReload   NoticeBtnJumpType = "reload"
 )
 
 const (
@@ -45,7 +46,7 @@ type NoticeData struct {
 	FromUid       int            `json:"from_uid"`        //用户id
 	PluginAlias   string         `json:"plugin_alias"`    //插件id
 	Source        string         `json:"source"`          //来源
-	NoticeJumpBtn *NoticeJumpBtn `json:"notice_jump_btn"` //跳转按钮
+	NoticeJumpBtn *NoticeJumpBtn `json:"notice_jump_btn,omitempty"` //跳转按钮
 	PublishTime   time.Time      `json:"publish_time"`    //发布时间
 }
 
