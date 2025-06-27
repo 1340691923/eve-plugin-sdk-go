@@ -72,6 +72,7 @@ func Serve(opts ServeOpts) {
 
 	if opts.Debug {
 		os.Setenv(MagicCookieKey, MagicCookieValue)
+		log.Println("start link pluginServe")
 		go plugin.Serve(&plugin.ServeConfig{
 			HandshakeConfig:  handshake,
 			GRPCServer:       opts.GRPCServer,
@@ -84,6 +85,7 @@ func Serve(opts ServeOpts) {
 				SyncStdio:        false,
 			},
 		})
+		log.Println("start link pluginReattachConfig")
 		select {
 		case pluginReattachConfig := <-reattachConfig:
 			err := ev_api.GetEvApi().LoadDebugPlugin(context.Background(), &dto.LoadDebugPlugin{
