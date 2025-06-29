@@ -3,14 +3,17 @@ package ev_api
 
 // 导入所需的包
 import (
+	"bytes"
 	// 上下文包
 	"context"
+	"io"
+	"net/http"
+
 	// JSON编码包
 	"encoding/json"
 	// 格式化包
 	"fmt"
-	// 日志包
-	"github.com/1340691923/eve-plugin-sdk-go/backend/logger"
+
 	// 枚举包
 	"github.com/1340691923/eve-plugin-sdk-go/enum"
 	// MongoDB BSON包
@@ -51,8 +54,7 @@ type evApi struct {
 	debug bool
 	// 插件ID
 	pluginId string
-	// HTTP客户端
-	client *fasthttp.Client
+	client   *http.Client
 }
 
 // 全局变量
@@ -79,17 +81,21 @@ func init() {
 //   - *evApi: EVE API实例
 func SetEvApi(rpcPort, pluginId string, debug bool) *evApi {
 	// 创建HTTP客户端，设置超时
-	client := &fasthttp.Client{
-		ReadTimeout:  300 * time.Second,
-		WriteTimeout: 300 * time.Second,
-	}
+
 	// 使用sync.Once确保单例模式
 	once.Do(func() {
 		evApiObj = &evApi{
 			rpcPort:  rpcPort,
 			pluginId: pluginId,
 			debug:    debug,
-			client:   client,
+			client: &http.Client{
+				Timeout: 300 * time.Second,
+				Transport: &http.Transport{
+					MaxIdleConns:        10000,
+					MaxIdleConnsPerHost: 10000,
+					IdleConnTimeout:     300 * time.Second,
+				},
+			},
 		}
 	})
 
@@ -1330,10 +1336,11 @@ func (this *evApi) request(ctx context.Context, api API, requestData interface{}
 		return errors.WithStack(err)
 	}
 	if this.debug {
-		logger.DefaultLogger.Info("debug network",
-			"api", api,
-			"reqBody", string(requestDataJSON),
-			"lose time", api, time.Now().Sub(t1).String())
+		_ = t1
+		/*logger.DefaultLogger.Info("debug network",
+		"api", api,
+		"reqBody", string(requestDataJSON),
+		"lose time", api, time.Now().Sub(t1).String())*/
 	}
 	if len(nativeParse) > 0 {
 		err = json.Unmarshal(res, result)
@@ -1377,10 +1384,11 @@ func (this *evApi) requestProtobuf(ctx context.Context, api API, requestData int
 	}
 
 	if this.debug {
-		logger.DefaultLogger.Info("debug network",
-			"api", api,
-			"reqBody", string(requestDataJSON),
-			"lose time", api, time.Now().Sub(t1).String())
+		_ = t1
+		/*logger.DefaultLogger.Info("debug network",
+		"api", api,
+		"reqBody", string(requestDataJSON),
+		"lose time", api, time.Now().Sub(t1).String())*/
 	}
 
 	p := &pluginv2.CallResourceResponse{}
@@ -1422,7 +1430,12 @@ func (this *evApi) requestProtobuf(ctx context.Context, api API, requestData int
 // 返回：
 //   - []byte: 响应数据
 //   - error: 错误信息
-func (this *evApi) SendRequest(ctx context.Context, api API, method string, requestDataJSON []byte) ([]byte, error) {
+func (this *evApi) SendRequestByFasthttp(ctx context.Context, api API, method string, requestDataJSON []byte) ([]byte, error) {
+	client := &fasthttp.Client{
+		ReadTimeout:  300 * time.Second,
+		WriteTimeout: 300 * time.Second,
+	}
+
 	// 构建请求对象
 	req := fasthttp.AcquireRequest()
 	defer fasthttp.ReleaseRequest(req) // 释放请求对象，防止内存泄漏
@@ -1449,7 +1462,7 @@ func (this *evApi) SendRequest(ctx context.Context, api API, method string, requ
 
 	// 启动异步请求
 	go func() {
-		errCh <- this.client.Do(req, resp)
+		errCh <- client.Do(req, resp)
 	}()
 
 	select {
@@ -1468,6 +1481,38 @@ func (this *evApi) SendRequest(ctx context.Context, api API, method string, requ
 	return resp.Body(), nil
 }
 
+func (this *evApi) SendRequest(ctx context.Context, api API, method string, requestDataJSON []byte) ([]byte, error) {
+	// 创建请求对象
+	url := fmt.Sprintf("http://127.0.0.1:%s/%s", this.rpcPort, api)
+	req, err := http.NewRequestWithContext(ctx, method, url, bytes.NewReader(requestDataJSON))
+	if err != nil {
+		return nil, errors.WithStack(err)
+	}
+
+	// 设置请求头
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set(enum.EvFromPluginID, this.pluginId)
+	// 发送请求
+	resp, err := this.client.Do(req)
+	if err != nil {
+		return nil, errors.WithStack(fmt.Errorf("request failed: %w", err))
+	}
+	defer resp.Body.Close() // 确保关闭响应体
+
+	// 读取响应
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, errors.WithStack(fmt.Errorf("failed to read response: %w", err))
+	}
+
+	// 检查HTTP状态码
+	if resp.StatusCode >= 400 {
+		return body, errors.WithStack(fmt.Errorf("HTTP error: %s", resp.Status))
+	}
+
+	return body, nil
+}
+
 // PluginRequestOptions 插件请求选项配置
 type PluginRequestOptions struct {
 	QueryParams url.Values        // URL 查询参数
@@ -1476,18 +1521,6 @@ type PluginRequestOptions struct {
 	UserId      int               //当前操作者id
 }
 
-// CallPlugin 调用其他插件的API
-// 参数：
-//   - ctx: 上下文
-//   - pluginAlias: 插件别名
-//   - api: API路径
-//   - method: HTTP方法
-//   - body: 请求体
-//   - opts: 请求选项
-//
-// 返回：
-//   - []byte: 响应数据
-//   - error: 错误信息
 func (this *evApi) CallPlugin(
 	ctx context.Context,
 	pluginAlias string,
@@ -1496,6 +1529,95 @@ func (this *evApi) CallPlugin(
 	body []byte,
 	opts *PluginRequestOptions,
 ) ([]byte, error) {
+	// 保护 opts 为非 nil
+	if opts == nil {
+		opts = &PluginRequestOptions{}
+	}
+
+	// 使用 path.Join 处理路径拼接
+	fullPath := path.Join(pluginAlias, api)
+	url := fmt.Sprintf("http://127.0.0.1:%s/api/plugin_util/CallPlugin/%s", this.rpcPort, fullPath)
+
+	// 创建请求对象
+	req, err := http.NewRequest(method, url, bytes.NewReader(body))
+	if err != nil {
+		return nil, errors.WithStack(err)
+	}
+	req = req.WithContext(ctx) // 关联上下文
+
+	// 设置固定头
+	req.Header.Set(enum.EvFromPluginID, this.pluginId)
+
+	// 设置默认 Content-Type
+	if _, ok := opts.Headers["Content-Type"]; !ok {
+		req.Header.Set("Content-Type", "application/json")
+	}
+
+	// 设置用户ID
+	if opts.UserId > 0 {
+		req.Header.Set(enum.EvUserID, cast.ToString(opts.UserId))
+	}
+
+	// 设置自定义头
+	for k, v := range opts.Headers {
+		req.Header.Set(k, v)
+	}
+
+	// 设置查询参数
+	if len(opts.QueryParams) > 0 {
+		q := req.URL.Query()
+		for k, values := range opts.QueryParams {
+			for _, v := range values {
+				q.Add(k, v)
+			}
+		}
+		req.URL.RawQuery = q.Encode()
+	}
+
+	// 处理超时逻辑
+	var resp *http.Response
+	if opts.Timeout > 0 {
+		// 创建带超时的子上下文
+		timeoutCtx, cancel := context.WithTimeout(ctx, opts.Timeout)
+		defer cancel()
+
+		resp, err = this.client.Do(req.WithContext(timeoutCtx))
+	} else {
+		resp, err = this.client.Do(req)
+	}
+
+	if err != nil {
+		return nil, errors.WithStack(fmt.Errorf("request failed: %w", err))
+	}
+	defer resp.Body.Close()
+
+	// 读取响应体
+	respBody, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, errors.WithStack(fmt.Errorf("failed to read response body: %w", err))
+	}
+
+	// 检查HTTP状态码
+	if resp.StatusCode >= 400 {
+		return respBody, errors.WithStack(fmt.Errorf("HTTP error: %s", resp.Status))
+	}
+
+	return respBody, nil
+}
+
+func (this *evApi) CallPluginByFasthttp(
+	ctx context.Context,
+	pluginAlias string,
+	api string,
+	method string,
+	body []byte,
+	opts *PluginRequestOptions,
+) ([]byte, error) {
+	client := &fasthttp.Client{
+		ReadTimeout:  300 * time.Second,
+		WriteTimeout: 300 * time.Second,
+	}
+
 	// 保护 opts 为非 nil
 	if opts == nil {
 		opts = &PluginRequestOptions{}
@@ -1548,9 +1670,9 @@ func (this *evApi) CallPlugin(
 	go func() {
 		var err error
 		if timeout > 0 {
-			err = this.client.DoTimeout(req, resp, timeout)
+			err = client.DoTimeout(req, resp, timeout)
 		} else {
-			err = this.client.Do(req, resp)
+			err = client.Do(req, resp)
 		}
 		errCh <- err
 	}()

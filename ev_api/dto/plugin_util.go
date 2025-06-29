@@ -8,9 +8,10 @@ import (
 )
 
 type LoadDebugPlugin struct {
-	ID   string `json:"id"`
-	Addr string `json:"addr"`
-	Pid  int    `json:"pid"`
+	ID      string `json:"id"`
+	Addr    string `json:"addr"`
+	Pid     int    `json:"pid"`
+	NetType string `json:"net_type"`
 }
 
 type StopDebugPlugin struct {

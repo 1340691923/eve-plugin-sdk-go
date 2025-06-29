@@ -72,7 +72,6 @@ func Serve(opts ServeOpts) {
 
 	if opts.Debug {
 		os.Setenv(MagicCookieKey, MagicCookieValue)
-		log.Println("start link pluginServe")
 		go plugin.Serve(&plugin.ServeConfig{
 			HandshakeConfig:  handshake,
 			GRPCServer:       opts.GRPCServer,
@@ -85,13 +84,14 @@ func Serve(opts ServeOpts) {
 				SyncStdio:        false,
 			},
 		})
-		log.Println("start link pluginReattachConfig")
+
 		select {
 		case pluginReattachConfig := <-reattachConfig:
 			err := ev_api.GetEvApi().LoadDebugPlugin(context.Background(), &dto.LoadDebugPlugin{
-				ID:   opts.PluginID,
-				Addr: pluginReattachConfig.Addr.String(),
-				Pid:  pluginReattachConfig.Pid,
+				ID:      opts.PluginID,
+				Addr:    pluginReattachConfig.Addr.String(),
+				Pid:     pluginReattachConfig.Pid,
+				NetType: string(pluginReattachConfig.Protocol),
 			})
 			if err != nil {
 				panic(fmt.Sprintf("链接ev基座异常:%s", err.Error()))
