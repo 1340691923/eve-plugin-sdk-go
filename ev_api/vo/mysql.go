@@ -12,3 +12,12 @@ type MysqlSelectSqlRes struct {
 type MysqlFirstSqlRes struct {
 	Result map[string]interface{} `json:"result"`
 }
+
+type MysqlDbsRes struct {
+	Dbs []string `json:"dbs"`
+}
+
+
+type MysqlTablesRes struct {
+	Tables []string `json:"tables"`
+}

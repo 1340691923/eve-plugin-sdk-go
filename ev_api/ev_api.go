@@ -1213,6 +1213,7 @@ func (this *evApi) MysqlExecSql(ctx context.Context, req *dto.MysqlExecReq) (row
 //   - err: 错误信息
 func (this *evApi) MysqlSelectSql(ctx context.Context, req *dto.MysqlSelectReq) (columns []string, result []map[string]interface{}, err error) {
 	data := &vo.MysqlSelectSqlRes{}
+	req.DbName = fmt.Sprintf("`%s`", req.DbName)
 	err = this.request(ctx, "api/plugin_util/MysqlSelectSql", req, &vo.ApiCommonRes{Data: data}, true)
 	if err != nil {
 		return nil, nil, errors.WithStack(err)
@@ -1230,11 +1231,31 @@ func (this *evApi) MysqlSelectSql(ctx context.Context, req *dto.MysqlSelectReq) 
 //   - err: 错误信息
 func (this *evApi) MysqlFirstSql(ctx context.Context, req *dto.MysqlSelectReq) (result map[string]interface{}, err error) {
 	data := &vo.MysqlFirstSqlRes{}
+	req.DbName = fmt.Sprintf("`%s`", req.DbName)
 	err = this.request(ctx, "api/plugin_util/MysqlFirstSql", req, &vo.ApiCommonRes{Data: data}, true)
 	if err != nil {
 		return data.Result, err
 	}
 	return data.Result, nil
+}
+
+func (this *evApi) MysqlDbs(ctx context.Context, req *dto.MysqlDbsReq) (dbs []string, err error) {
+	data := &vo.MysqlDbsRes{}
+	err = this.request(ctx, "api/plugin_util/MysqlFirstSql", req, &vo.ApiCommonRes{Data: data}, true)
+	if err != nil {
+		return data.Dbs, err
+	}
+	return data.Dbs, nil
+}
+
+func (this *evApi) MysqlTables(ctx context.Context, req *dto.MysqlTablesReq) (tables []string, err error) {
+	data := &vo.MysqlTablesRes{}
+	req.DbName = fmt.Sprintf("`%s`", req.DbName)
+	err = this.request(ctx, "api/plugin_util/MysqlFirstSql", req, &vo.ApiCommonRes{Data: data}, true)
+	if err != nil {
+		return data.Tables, err
+	}
+	return data.Tables, nil
 }
 
 // RedisExecCommand 执行Redis命令

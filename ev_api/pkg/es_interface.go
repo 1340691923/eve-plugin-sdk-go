@@ -66,6 +66,10 @@ type ClientInterface interface {
 	MysqlSelectSql(ctx context.Context, dbName, sql string, args ...interface{}) (columns []string, list []map[string]interface{}, err error)
 	MysqlFirstSql(ctx context.Context, dbName, sql string, args ...interface{}) (data map[string]interface{}, err error)
 
+	MysqlDbs(ctx context.Context) (dbs []string, err error)
+
+	MysqlTables(ctx context.Context,dbName string) (tables []string, err error)
+
 	//redis数据源接口
 	RedisExecCommand(ctx context.Context, dbName int, args ...interface{}) (data interface{}, err error)
 

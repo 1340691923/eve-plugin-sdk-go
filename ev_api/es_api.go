@@ -247,6 +247,19 @@ func (this *EvApiAdapter) MysqlFirstSql(ctx context.Context, dbName, sql string,
 	})
 }
 
+func (this *EvApiAdapter) MysqlDbs(ctx context.Context) (dbs []string, err error) {
+	return GetEvApi().MysqlDbs(ctx, &dto.MysqlDbsReq{
+		EsConnectData: this.buildEsConnectData(),
+	})
+}
+
+func (this *EvApiAdapter) MysqlTables(ctx context.Context, dbName string) (tables []string, err error) {
+	return GetEvApi().MysqlTables(ctx, &dto.MysqlTablesReq{
+		EsConnectData: this.buildEsConnectData(),
+		DbName:        dbName,
+	})
+}
+
 // RedisExecCommand 执行Redis命令
 // 参数：
 //   - ctx: 上下文

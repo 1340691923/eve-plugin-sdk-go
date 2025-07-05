@@ -24,3 +24,15 @@ type MysqlSelectReq struct {
 	// 数据库名称
 	DbName string `json:"dbName"`
 }
+
+type MysqlDbsReq struct {
+	// ES连接数据
+	EsConnectData EsConnectData `json:"es_connect_data"`
+}
+
+type MysqlTablesReq struct {
+	// ES连接数据
+	EsConnectData EsConnectData `json:"es_connect_data"`
+	// 数据库名称
+	DbName string `json:"dbName"`
+}

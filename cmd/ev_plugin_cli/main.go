@@ -440,6 +440,9 @@ func runDoctorCmd(cmd *cobra.Command, args []string) error {
 // runInitCmd 执行初始化插件项目命令
 func runInitCmd(cmd *cobra.Command, args []string) error {
 	fmt.Println("🚀 初始化 ElasticView 插件项目...")
+
+	pluginAlias = strings.ReplaceAll(pluginAlias, "_", "-")
+
 	fmt.Printf("📋 插件名称: %s\n", pluginName)
 	fmt.Printf("📋 插件别名: %s\n", pluginAlias)
 	fmt.Println("---")
