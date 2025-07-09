@@ -253,6 +253,12 @@ func (this *EvApiAdapter) MysqlDbs(ctx context.Context) (dbs []string, err error
 	})
 }
 
+func (this *EvApiAdapter) DsType(ctx context.Context) (dsType string, err error) {
+	return GetEvApi().DsType(ctx, &dto.DsTypeReq{
+		EsConnectData: this.buildEsConnectData(),
+	})
+}
+
 func (this *EvApiAdapter) MysqlTables(ctx context.Context, dbName string) (tables []string, err error) {
 	return GetEvApi().MysqlTables(ctx, &dto.MysqlTablesReq{
 		EsConnectData: this.buildEsConnectData(),

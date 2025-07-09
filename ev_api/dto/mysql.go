@@ -36,3 +36,11 @@ type MysqlTablesReq struct {
 	// 数据库名称
 	DbName string `json:"dbName"`
 }
+
+
+
+
+type DsTypeReq struct {
+	// ES连接数据
+	EsConnectData EsConnectData `json:"es_connect_data"`
+}

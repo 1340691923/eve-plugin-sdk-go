@@ -78,4 +78,6 @@ type ClientInterface interface {
 	ExecMongoCommand(ctx context.Context, dbName string, command bson.D, timeout time.Duration) (res bson.M, err error)
 
 	ShowMongoDbs(ctx context.Context) ([]string, error)
+
+	DsType() string
 }

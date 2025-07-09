@@ -1248,6 +1248,15 @@ func (this *evApi) MysqlDbs(ctx context.Context, req *dto.MysqlDbsReq) (dbs []st
 	return data.Dbs, nil
 }
 
+func (this *evApi) DsType(ctx context.Context, req *dto.DsTypeReq) (dsType string, err error) {
+	data := &vo.DsTypeRes{}
+	err = this.request(ctx, "api/plugin_util/DsType", req, &vo.ApiCommonRes{Data: data}, true)
+	if err != nil {
+		return data.DsType, err
+	}
+	return data.DsType, nil
+}
+
 func (this *evApi) MysqlTables(ctx context.Context, req *dto.MysqlTablesReq) (tables []string, err error) {
 	data := &vo.MysqlTablesRes{}
 	req.DbName = fmt.Sprintf("`%s`", req.DbName)

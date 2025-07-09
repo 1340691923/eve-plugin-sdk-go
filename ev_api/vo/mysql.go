@@ -21,3 +21,7 @@ type MysqlDbsRes struct {
 type MysqlTablesRes struct {
 	Tables []string `json:"tables"`
 }
+
+type DsTypeRes struct {
+	DsType string `json:"ds_type"`
+}
