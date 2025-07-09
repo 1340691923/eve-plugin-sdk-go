@@ -4,6 +4,7 @@ package ev_api
 // 导入所需的包
 import (
 	"bytes"
+
 	// 上下文包
 	"context"
 	"io"
@@ -33,7 +34,6 @@ import (
 	// 类型转换包
 	"github.com/spf13/cast"
 	// 高性能HTTP客户端
-	"github.com/valyala/fasthttp"
 	// Protobuf编码包
 	protobuf "google.golang.org/protobuf/proto"
 	// URL处理包
@@ -1361,7 +1361,7 @@ func (this *evApi) request(ctx context.Context, api API, requestData interface{}
 	}
 
 	t1 := time.Now()
-	res, err := this.SendRequest(ctx, api, fasthttp.MethodPost, requestDataJSON)
+	res, err := this.SendRequest(ctx, api, "POST", requestDataJSON)
 	if err != nil {
 		return errors.WithStack(err)
 	}
@@ -1408,7 +1408,7 @@ func (this *evApi) requestProtobuf(ctx context.Context, api API, requestData int
 	}
 
 	t1 := time.Now()
-	res, err := this.SendRequest(ctx, api, fasthttp.MethodPost, requestDataJSON)
+	res, err := this.SendRequest(ctx, api, "POST", requestDataJSON)
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}
@@ -1448,67 +1448,6 @@ func (this *evApi) requestProtobuf(ctx context.Context, api API, requestData int
 	}
 
 	return result, err
-}
-
-// SendRequest 发送HTTP请求的底层方法
-// 参数：
-//   - ctx: 上下文
-//   - api: API路径
-//   - method: HTTP方法
-//   - requestDataJSON: JSON格式请求数据
-//
-// 返回：
-//   - []byte: 响应数据
-//   - error: 错误信息
-func (this *evApi) SendRequestByFasthttp(ctx context.Context, api API, method string, requestDataJSON []byte) ([]byte, error) {
-	client := &fasthttp.Client{
-		ReadTimeout:  300 * time.Second,
-		WriteTimeout: 300 * time.Second,
-	}
-
-	// 构建请求对象
-	req := fasthttp.AcquireRequest()
-	defer fasthttp.ReleaseRequest(req) // 释放请求对象，防止内存泄漏
-
-	resp := fasthttp.AcquireResponse()
-	defer fasthttp.ReleaseResponse(resp) // 释放响应对象，防止内存泄漏
-
-	// 设置请求 URL
-	url := fmt.Sprintf("http://127.0.0.1:%s/%s", this.rpcPort, api)
-	req.SetRequestURI(url)
-
-	// 设置请求方法为 POST
-	req.Header.SetMethod(method)
-	req.Header.Set("Content-Type", "application/json")
-	// 设置自定义头
-	req.Header.Set(enum.EvFromPluginID, this.pluginId)
-
-	// 设置请求体
-	req.SetBody(requestDataJSON)
-
-	// 发起请求
-
-	errCh := make(chan error, 1)
-
-	// 启动异步请求
-	go func() {
-		errCh <- client.Do(req, resp)
-	}()
-
-	select {
-	case <-ctx.Done():
-		// 防止 goroutine 泄漏
-		go func() { <-errCh }()
-		return nil, errors.WithStack(ctx.Err())
-
-	case err := <-errCh:
-		if err != nil {
-			return nil, errors.WithStack(fmt.Errorf("request failed: %w", err))
-		}
-	}
-
-	// 返回响应体
-	return resp.Body(), nil
 }
 
 func (this *evApi) SendRequest(ctx context.Context, api API, method string, requestDataJSON []byte) ([]byte, error) {
@@ -1633,91 +1572,4 @@ func (this *evApi) CallPlugin(
 	}
 
 	return respBody, nil
-}
-
-func (this *evApi) CallPluginByFasthttp(
-	ctx context.Context,
-	pluginAlias string,
-	api string,
-	method string,
-	body []byte,
-	opts *PluginRequestOptions,
-) ([]byte, error) {
-	client := &fasthttp.Client{
-		ReadTimeout:  300 * time.Second,
-		WriteTimeout: 300 * time.Second,
-	}
-
-	// 保护 opts 为非 nil
-	if opts == nil {
-		opts = &PluginRequestOptions{}
-	}
-
-	req := fasthttp.AcquireRequest()
-	defer fasthttp.ReleaseRequest(req)
-
-	resp := fasthttp.AcquireResponse()
-	defer fasthttp.ReleaseResponse(resp)
-
-	// 使用 path.Join 处理路径拼接，避免 // 或缺失 /
-	fullPath := path.Join(pluginAlias, api)
-
-	// 构建 URL + query 参数
-	url := fmt.Sprintf("http://127.0.0.1:%s/api/plugin_util/CallPlugin/%s", this.rpcPort, fullPath)
-	if len(opts.QueryParams) > 0 {
-		url += "?" + opts.QueryParams.Encode()
-	}
-	req.SetRequestURI(url)
-	req.Header.SetMethod(method)
-
-	// 固定头
-	req.Header.Set(enum.EvFromPluginID, this.pluginId)
-
-	if opts.Headers["Content-Type"] == "" {
-		req.Header.Set("Content-Type", "application/json")
-	}
-
-	if opts.UserId > 0 {
-		req.Header.Set(enum.EvUserID, cast.ToString(opts.UserId))
-	}
-
-	// 用户自定义头
-	for k, v := range opts.Headers {
-		req.Header.Set(k, v)
-	}
-
-	// 设置 Body（不自动设置 Content-Type）
-	if len(body) > 0 {
-		req.SetBody(body)
-	}
-
-	// 判断是否设置超时时间
-	timeout := opts.Timeout
-
-	// 使用 channel 管理 goroutine 错误
-	errCh := make(chan error, 1)
-
-	go func() {
-		var err error
-		if timeout > 0 {
-			err = client.DoTimeout(req, resp, timeout)
-		} else {
-			err = client.Do(req, resp)
-		}
-		errCh <- err
-	}()
-
-	select {
-	case <-ctx.Done():
-		// 防止 goroutine 泄漏
-		go func() { <-errCh }()
-		return nil, errors.WithStack(ctx.Err())
-
-	case err := <-errCh:
-		if err != nil {
-			return nil, errors.WithStack(fmt.Errorf("request failed: %w", err))
-		}
-	}
-
-	return resp.Body(), nil
 }
