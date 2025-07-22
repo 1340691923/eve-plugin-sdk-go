@@ -68,7 +68,7 @@ type ClientInterface interface {
 
 	MysqlDbs(ctx context.Context) (dbs []string, err error)
 
-	MysqlTables(ctx context.Context,dbName string) (tables []string, err error)
+	MysqlTables(ctx context.Context, dbName string) (tables []string, err error)
 
 	//redis数据源接口
 	RedisExecCommand(ctx context.Context, dbName int, args ...interface{}) (data interface{}, err error)
@@ -78,6 +78,22 @@ type ClientInterface interface {
 	ExecMongoCommand(ctx context.Context, dbName string, command bson.D, timeout time.Duration) (res bson.M, err error)
 
 	ShowMongoDbs(ctx context.Context) ([]string, error)
+
+	MongoAggregateDocuments(ctx context.Context, dbName, collectionName string, pipeline bson.Pipeline) ([]bson.M, error)
+
+	MongoCountDocuments(ctx context.Context, dbName, collectionName string, filter bson.M) (int64, error)
+
+	MongoInsertManyDocuments(ctx context.Context, dbName, collectionName string, docs []bson.M) (insertIds []string, err error)
+
+	MongoInsertDocument(ctx context.Context, dbName, collectionName string, doc bson.M) (insertId string, err error)
+
+	MongoDeleteDocument(ctx context.Context, dbName, collectionName string, docId interface{}, filter bson.M) (deleteCnt int64, err error)
+
+	MongoUpdateDocument(ctx context.Context, dbName, collectionName string, docId interface{}, filter bson.M, update bson.M) (matchedCount int64, modifiedCount int64, upsertedCount int64, upsertedID interface{}, err error)
+
+	MongoFindDocuments(ctx context.Context, dbName, collectionName string, projection bson.M, filter bson.M, sort bson.D, skip int64, limit int64) ([]bson.M, error)
+
+	MongoGetCollections(ctx context.Context, dbName string) ([]string, error)
 
 	DsType() string
 }

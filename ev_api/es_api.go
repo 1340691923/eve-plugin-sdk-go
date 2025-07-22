@@ -33,6 +33,199 @@ type EvApiAdapter struct {
 	UserId int
 }
 
+// MongoAggregateDocuments 执行MongoDB聚合查询
+// 参数：
+//   - ctx: 上下文
+//   - dbName: 数据库名称
+//   - collectionName: 集合名称
+//   - pipeline: 聚合管道
+//
+// 返回：
+//   - []bson.M: 聚合查询结果
+//   - error: 错误信息
+func (this *EvApiAdapter) MongoAggregateDocuments(ctx context.Context, dbName, collectionName string, pipeline bson.Pipeline) ([]bson.M, error) {
+	return GetEvApi().AggregateMongoDocuments(ctx, &dto.AggregateMongoDocumentsReq{
+		EsConnectData:  this.buildEsConnectData(),
+		DbName:         dbName,
+		CollectionName: collectionName,
+		Pipeline:       pipeline,
+	})
+}
+
+// MongoCountDocuments 统计MongoDB文档数量
+// 参数：
+//   - ctx: 上下文
+//   - dbName: 数据库名称
+//   - collectionName: 集合名称
+//   - filter: 查询过滤条件
+//
+// 返回：
+//   - int64: 文档数量
+//   - error: 错误信息
+func (this *EvApiAdapter) MongoCountDocuments(ctx context.Context, dbName, collectionName string, filter bson.M) (int64, error) {
+	return GetEvApi().CountMongoDocuments(ctx, &dto.CountMongoDocumentsReq{
+		EsConnectData:  this.buildEsConnectData(),
+		DbName:         dbName,
+		CollectionName: collectionName,
+		Filter:         filter,
+	})
+}
+
+// MongoInsertManyDocuments 批量插入MongoDB文档
+// 参数：
+//   - ctx: 上下文
+//   - dbName: 数据库名称
+//   - collectionName: 集合名称
+//   - docs: 要插入的文档列表
+//
+// 返回：
+//   - []interface{}: 插入后的文档ID列表
+//   - error: 错误信息
+func (this *EvApiAdapter) MongoInsertManyDocuments(ctx context.Context, dbName, collectionName string, docs []bson.M) (insertIds []string, err error) {
+	return GetEvApi().InsertManyMongoDocuments(ctx, &dto.InsertManyMongoDocumentsReq{
+		EsConnectData:  this.buildEsConnectData(),
+		DbName:         dbName,
+		CollectionName: collectionName,
+		Docs:           docs,
+	})
+}
+
+// MongoInsertDocument 插入单个MongoDB文档
+// 参数：
+//   - ctx: 上下文
+//   - dbName: 数据库名称
+//   - collectionName: 集合名称
+//   - doc: 要插入的文档
+//
+// 返回：
+//   - interface{}: 插入后的文档ID
+//   - error: 错误信息
+func (this *EvApiAdapter) MongoInsertDocument(ctx context.Context, dbName, collectionName string, doc bson.M) (insertId string, err error) {
+	result, err := GetEvApi().InsertMongoDocument(ctx, &dto.InsertMongoDocumentReq{
+		EsConnectData:  this.buildEsConnectData(),
+		DbName:         dbName,
+		CollectionName: collectionName,
+		Doc:            doc,
+	})
+	if err != nil {
+		return "", err
+	}
+	return result, nil
+}
+
+// MongoDeleteDocument 删除单个MongoDB文档
+// 参数：
+//   - ctx: 上下文
+//   - dbName: 数据库名称
+//   - collectionName: 集合名称
+//   - docId: 要删除的文档ID
+//
+// 返回：
+//   - int64: 删除的文档数量
+//   - error: 错误信息
+func (this *EvApiAdapter) MongoDeleteDocument(ctx context.Context, dbName, collectionName string, docId interface{}, filter bson.M) (deleteCnt int64, err error) {
+	return GetEvApi().DeleteMongoDocument(ctx, &dto.DeleteMongoDocumentReq{
+		EsConnectData:  this.buildEsConnectData(),
+		DbName:         dbName,
+		CollectionName: collectionName,
+		DocId:          docId,
+		Filter:         filter,
+	})
+}
+
+// MongoUpdateDocument 更新MongoDB文档
+// 参数：
+//   - ctx: 上下文
+//   - dbName: 数据库名称
+//   - collectionName: 集合名称
+//   - docId: 要更新的文档ID
+//   - update: 更新操作
+//
+// 返回：
+//   - matchedCount: 匹配的文档数量
+//   - modifiedCount: 修改的文档数量
+//   - upsertedCount: 插入的文档数量
+//   - upsertedID: 插入的文档ID
+//   - error: 错误信息
+func (this *EvApiAdapter) MongoUpdateDocument(ctx context.Context, dbName, collectionName string, docId interface{}, filter bson.M, update bson.M) (matchedCount int64, modifiedCount int64, upsertedCount int64, upsertedID interface{}, err error) {
+	result, err := GetEvApi().UpdateMongoDocument(ctx, &dto.UpdateMongoDocumentReq{
+		EsConnectData:  this.buildEsConnectData(),
+		DbName:         dbName,
+		CollectionName: collectionName,
+		DocId:          docId,
+		Update:         update,
+		Filter:         filter,
+	})
+	if err != nil {
+		return 0, 0, 0, nil, err
+	}
+	return result.MatchedCount, result.ModifiedCount, result.UpsertedCount, result.UpsertedID, nil
+}
+
+// MongoFindDocuments 查找MongoDB文档
+// 参数：
+//   - ctx: 上下文
+//   - dbName: 数据库名称
+//   - collectionName: 集合名称
+//   - filter: 查询过滤条件
+//   - sort: 排序条件
+//   - skip: 跳过的文档数量
+//   - limit: 返回的文档数量限制
+//
+// 返回：
+//   - []bson.M: 查询结果文档列表
+//   - error: 错误信息
+func (this *EvApiAdapter) MongoFindDocuments(ctx context.Context, dbName, collectionName string, projection bson.M, filter bson.M, sort bson.D, skip int64, limit int64) ([]bson.M, error) {
+	return GetEvApi().FindMongoDocuments(ctx, &dto.FindMongoDocumentsReq{
+		EsConnectData:  this.buildEsConnectData(),
+		DbName:         dbName,
+		CollectionName: collectionName,
+		Filter:         filter,
+		Projection:     projection,
+		Sort:           sort,
+		Skip:           skip,
+		Limit:          limit,
+	})
+}
+
+// MongoGetCollections 获取MongoDB数据库中的集合列表
+// 参数：
+//   - ctx: 上下文
+//   - dbName: 数据库名称
+//
+// 返回：
+//   - []string: 集合名称列表
+//   - error: 错误信息
+func (this *EvApiAdapter) MongoGetCollections(ctx context.Context, dbName string) ([]string, error) {
+	return GetEvApi().GetMongoCollections(ctx, &dto.GetMongoCollectionsReq{
+		EsConnectData: this.buildEsConnectData(),
+		DbName:        dbName,
+	})
+}
+// ShowMongoDbs 显示MongoDB数据库列表
+// 参数：
+//   - ctx: 上下文
+//
+// 返回：
+//   - []string: 数据库名称列表
+//   - error: 错误信息
+func (this *EvApiAdapter) ShowMongoDbs(ctx context.Context) ([]string, error) {
+	return GetEvApi().ShowMongoDbs(ctx, &dto.ShowMongoDbsReq{EsConnectData: this.buildEsConnectData()})
+}
+// DsType 获取数据源类型
+// 返回：
+//   - string: 数据源类型字符串
+func (this *EvApiAdapter) DsType() string {
+	dsType, err := GetEvApi().DsType(context.Background(), &dto.DsTypeReq{
+		EsConnectData: this.buildEsConnectData(),
+	})
+	if err != nil {
+		logger.DefaultLogger.Error("get ds type err", err)
+		return ""
+	}
+	return dsType
+}
+
 // NewEvWrapApi 创建一个新的ES API适配器
 // 参数：
 //   - connId: 连接ID
@@ -189,7 +382,7 @@ func (this *EvApiAdapter) EsVersion() (version int, err error) {
 	return verson, nil
 }
 
-// MysqlExecSql 执行MySQL SQL语句
+// MysqlExecSql 执行MySQL SQL语句（INSERT、UPDATE、DELETE）
 // 参数：
 //   - ctx: 上下文
 //   - dbName: 数据库名称
@@ -247,18 +440,27 @@ func (this *EvApiAdapter) MysqlFirstSql(ctx context.Context, dbName, sql string,
 	})
 }
 
+// MysqlDbs 获取MySQL数据库列表
+// 参数：
+//   - ctx: 上下文
+//
+// 返回：
+//   - dbs: 数据库名称列表
+//   - err: 错误信息
 func (this *EvApiAdapter) MysqlDbs(ctx context.Context) (dbs []string, err error) {
 	return GetEvApi().MysqlDbs(ctx, &dto.MysqlDbsReq{
 		EsConnectData: this.buildEsConnectData(),
 	})
 }
 
-func (this *EvApiAdapter) DsType(ctx context.Context) (dsType string, err error) {
-	return GetEvApi().DsType(ctx, &dto.DsTypeReq{
-		EsConnectData: this.buildEsConnectData(),
-	})
-}
-
+// MysqlTables 获取MySQL数据库中指定数据库的表列表
+// 参数：
+//   - ctx: 上下文
+//   - dbName: 数据库名称
+//
+// 返回：
+//   - tables: 表名称列表
+//   - err: 错误信息
 func (this *EvApiAdapter) MysqlTables(ctx context.Context, dbName string) (tables []string, err error) {
 	return GetEvApi().MysqlTables(ctx, &dto.MysqlTablesReq{
 		EsConnectData: this.buildEsConnectData(),
@@ -302,16 +504,7 @@ func (this *EvApiAdapter) ExecMongoCommand(ctx context.Context, dbName string, c
 	})
 }
 
-// ShowMongoDbs 显示MongoDB数据库列表
-// 参数：
-//   - ctx: 上下文
-//
-// 返回：
-//   - []string: 数据库名称列表
-//   - error: 错误信息
-func (this *EvApiAdapter) ShowMongoDbs(ctx context.Context) ([]string, error) {
-	return GetEvApi().ShowMongoDbs(ctx, &dto.ShowMongoDbsReq{EsConnectData: this.buildEsConnectData()})
-}
+
 
 // EsCatNodes 获取ES节点信息
 // 参数：

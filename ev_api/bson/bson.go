@@ -53,3 +53,5 @@ type M = primitive.M
 //
 //	bson.A{"bar", "world", 3.14159, bson.D{{"qux", 12345}}}
 type A = primitive.A
+
+type Pipeline []D

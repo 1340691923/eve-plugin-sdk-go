@@ -4,7 +4,7 @@ package ev_api
 // 导入所需的包
 import (
 	"bytes"
-
+	"github.com/1340691923/eve-plugin-sdk-go/backend/logger"
 	// 上下文包
 	"context"
 	"io"
@@ -849,7 +849,9 @@ func (this *evApi) EsTasksCancel(ctx context.Context, req dto.TasksCancelReq) (r
 //   - err: 错误信息
 func (this *evApi) StoreExec(ctx context.Context, sql string, args ...interface{}) (rowsAffected int64, err error) {
 	data := &vo.ExecSqlRes{}
-	err = this.request(ctx, "api/plugin_util/ExecSql", &dto.ExecSqlReq{PluginId: this.pluginId, Sql: sql, Args: args}, &vo.ApiCommonRes{Data: data})
+	err = this.request(ctx, "api/plugin_util/ExecSql",
+		&dto.ExecSqlReq{PluginId: this.pluginId, Sql: sql, Args: args},
+		&vo.ApiCommonRes{Data: data})
 	if err != nil {
 		return 0, err
 	}
@@ -909,7 +911,9 @@ func (this *evApi) LiveBroadcastEvMsg2Roles(ctx context.Context, notice *dto.Not
 
 	notice.PluginAlias = this.pluginId
 
-	err = this.request(ctx, "api/plugin_util/LiveBroadcastEvMsg2Roles", &dto.LiveBroadcastEvMsg2RolesReq{NoticeData: notice, RoleIds: roleIds}, &vo.ApiCommonRes{})
+	err = this.request(ctx, "api/plugin_util/LiveBroadcastEvMsg2Roles",
+		&dto.LiveBroadcastEvMsg2RolesReq{NoticeData: notice, RoleIds: roleIds},
+		&vo.ApiCommonRes{})
 	if err != nil {
 		return errors.WithStack(err)
 	}
@@ -1344,6 +1348,130 @@ func (this *evApi) ShowMongoDbs(ctx context.Context, req *dto.ShowMongoDbsReq) (
 	return cast.ToStringSlice(res.Data), nil
 }
 
+// FindMongoDocuments 查找MongoDB集合
+func (this *evApi) GetMongoCollections(ctx context.Context, req *dto.GetMongoCollectionsReq) (dbList []string, err error) {
+	res := &vo.ApiCommonRes{Data: dbList}
+	err = this.request(ctx, "api/plugin_util/GetMongoCollections", req, res)
+	if err != nil {
+		return nil, errors.WithStack(err)
+	}
+
+	return cast.ToStringSlice(res.Data), nil
+}
+
+// FindMongoDocuments 查找MongoDB文档
+func (this *evApi) FindMongoDocuments(ctx context.Context, req *dto.FindMongoDocumentsReq) (data []bson.M, err error) {
+	res, err := this.requestProtobuf(ctx, "api/plugin_util/FindMongoDocuments", req)
+	if err != nil {
+		return nil, errors.WithStack(err)
+	}
+	if res.StatusErr() != nil {
+		return nil, res.StatusErr()
+	}
+
+	data = []bson.M{}
+
+	err = json2.Unmarshal(res.ResByte(), &data)
+
+	if err != nil {
+		return nil, errors.WithStack(err)
+	}
+
+	return data, nil
+}
+
+// UpdateMongoDocument 更新MongoDB文档
+func (this *evApi) UpdateMongoDocument(ctx context.Context, req *dto.UpdateMongoDocumentReq) (res *vo.MongoUpdateRes, err error) {
+	result := &vo.ApiCommonRes{Data: res}
+	err = this.request(ctx, "api/plugin_util/UpdateMongoDocument", req, result)
+	if err != nil {
+		return nil, errors.WithStack(err)
+	}
+	resMap := cast.ToStringMap(result.Data)
+	res = &vo.MongoUpdateRes{
+		MatchedCount:  cast.ToInt64(resMap["MatchedCount"]),
+		ModifiedCount: cast.ToInt64(resMap["ModifiedCount"]),
+		UpsertedCount: cast.ToInt64(resMap["UpsertedCount"]),
+		UpsertedID:    resMap["UpsertedID"],
+	}
+	return res, nil
+}
+
+// DeleteMongoDocument 删除MongoDB文档 返回删除条数
+func (this *evApi) DeleteMongoDocument(ctx context.Context, req *dto.DeleteMongoDocumentReq) (res int64, err error) {
+	result := &vo.ApiCommonRes{Data: res}
+	err = this.request(ctx, "api/plugin_util/DeleteMongoDocument", req, result)
+	if err != nil {
+		return 0, errors.WithStack(err)
+	}
+
+	return cast.ToInt64(result.Data), nil
+}
+
+// InsertMongoDocument 插入MongoDB文档 返回插入后的id
+func (this *evApi) InsertMongoDocument(ctx context.Context, req *dto.InsertMongoDocumentReq) (res string, err error) {
+	result := &vo.ApiCommonRes{Data: res}
+	err = this.request(ctx, "api/plugin_util/InsertMongoDocument", req, result)
+	if err != nil {
+		return "", errors.WithStack(err)
+	}
+
+	return cast.ToString(result.Data), nil
+}
+
+// InsertManyMongoDocuments 批量插入MongoDB文档 返回插入的id列表
+func (this *evApi) InsertManyMongoDocuments(ctx context.Context, req *dto.InsertManyMongoDocumentsReq) (res []string, err error) {
+	result := &vo.ApiCommonRes{Data: res}
+	err = this.request(ctx, "api/plugin_util/InsertManyMongoDocuments", req, result)
+	if err != nil {
+		return nil, errors.WithStack(err)
+	}
+
+	return cast.ToStringSlice(result.Data), nil
+}
+
+// DeleteManyMongoDocuments 批量删除MongoDB文档 返回删除条数
+func (this *evApi) DeleteManyMongoDocuments(ctx context.Context, req *dto.DeleteManyMongoDocumentsReq) (res int64, err error) {
+	result := &vo.ApiCommonRes{Data: res}
+	err = this.request(ctx, "api/plugin_util/DeleteManyMongoDocuments", req, result)
+	if err != nil {
+		return 0, errors.WithStack(err)
+	}
+
+	return cast.ToInt64(result.Data), nil
+}
+
+// CountMongoDocuments 统计MongoDB文档数量 返回条数
+func (this *evApi) CountMongoDocuments(ctx context.Context, req *dto.CountMongoDocumentsReq) (res int64, err error) {
+	result := &vo.ApiCommonRes{}
+	err = this.request(ctx, "api/plugin_util/CountMongoDocuments", req, result)
+	if err != nil {
+		return 0, errors.WithStack(err)
+	}
+	return cast.ToInt64(result.Data), nil
+}
+
+// AggregateMongoDocuments 聚合查询MongoDB文档
+func (this *evApi) AggregateMongoDocuments(ctx context.Context, req *dto.AggregateMongoDocumentsReq) (data []bson.M, err error) {
+	res, err := this.requestProtobuf(ctx, "api/plugin_util/AggregateMongoDocuments", req)
+	if err != nil {
+		return nil, errors.WithStack(err)
+	}
+	if res.StatusErr() != nil {
+		return nil, res.StatusErr()
+	}
+
+	data = []bson.M{}
+
+	err = json2.Unmarshal(res.ResByte(), &data)
+
+	if err != nil {
+		return nil, errors.WithStack(err)
+	}
+
+	return data, nil
+}
+
 // request 发送HTTP请求的内部方法
 // 参数：
 //   - ctx: 上下文
@@ -1366,11 +1494,11 @@ func (this *evApi) request(ctx context.Context, api API, requestData interface{}
 		return errors.WithStack(err)
 	}
 	if this.debug {
-		_ = t1
-		/*logger.DefaultLogger.Info("debug network",
-		"api", api,
-		"reqBody", string(requestDataJSON),
-		"lose time", api, time.Now().Sub(t1).String())*/
+		logger.DefaultLogger.Info("debug network",
+			"api", api,
+			"reqBody", string(requestDataJSON),
+			"resBody", string(res),
+			"lose time", api, time.Now().Sub(t1).String())
 	}
 	if len(nativeParse) > 0 {
 		err = json.Unmarshal(res, result)
