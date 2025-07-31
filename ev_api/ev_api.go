@@ -1472,6 +1472,14 @@ func (this *evApi) AggregateMongoDocuments(ctx context.Context, req *dto.Aggrega
 	return data, nil
 }
 
+func (this *evApi) BatchInsertData(ctx context.Context, req *dto.BatchInsertDataReq) (err error) {
+	err = this.request(ctx, "api/plugin_util/BatchInsertData", req, &vo.ApiCommonRes{})
+	if err != nil {
+		return errors.WithStack(err)
+	}
+	return nil
+}
+
 // request 发送HTTP请求的内部方法
 // 参数：
 //   - ctx: 上下文
@@ -1542,11 +1550,10 @@ func (this *evApi) requestProtobuf(ctx context.Context, api API, requestData int
 	}
 
 	if this.debug {
-		_ = t1
-		/*logger.DefaultLogger.Info("debug network",
-		"api", api,
-		"reqBody", string(requestDataJSON),
-		"lose time", api, time.Now().Sub(t1).String())*/
+		logger.DefaultLogger.Info("debug network",
+			"api", api,
+			"reqBody", string(requestDataJSON),
+			"lose time", api, time.Now().Sub(t1).String())
 	}
 
 	p := &pluginv2.CallResourceResponse{}

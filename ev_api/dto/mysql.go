@@ -37,6 +37,13 @@ type MysqlTablesReq struct {
 	DbName string `json:"dbName"`
 }
 
+type BatchInsertDataReq struct {
+	EsConnectData EsConnectData `json:"es_connect_data"`
+	DbName string `json:"db_name"`
+	TableName string `json:"table_name"`
+	Cols []string `json:"cols"`
+	Data [][]interface{} `json:"data"`
+}
 
 
 

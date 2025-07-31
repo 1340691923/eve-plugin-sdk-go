@@ -96,4 +96,6 @@ type ClientInterface interface {
 	MongoGetCollections(ctx context.Context, dbName string) ([]string, error)
 
 	DsType() string
+
+	BatchInsertData(ctx context.Context,dbName, tableName string, cols []string, data [][]interface{}) error
 }

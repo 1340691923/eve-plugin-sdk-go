@@ -52,6 +52,16 @@ func (this *EvApiAdapter) MongoAggregateDocuments(ctx context.Context, dbName, c
 	})
 }
 
+func (this *EvApiAdapter) BatchInsertData(ctx context.Context, dbName, tableName string, cols []string, data [][]interface{}) error {
+	return GetEvApi().BatchInsertData(ctx, &dto.BatchInsertDataReq{
+		EsConnectData: this.buildEsConnectData(),
+		DbName:        dbName,
+		TableName:     tableName,
+		Cols:          cols,
+		Data:          data,
+	})
+}
+
 // MongoCountDocuments 统计MongoDB文档数量
 // 参数：
 //   - ctx: 上下文
@@ -202,6 +212,7 @@ func (this *EvApiAdapter) MongoGetCollections(ctx context.Context, dbName string
 		DbName:        dbName,
 	})
 }
+
 // ShowMongoDbs 显示MongoDB数据库列表
 // 参数：
 //   - ctx: 上下文
@@ -212,6 +223,7 @@ func (this *EvApiAdapter) MongoGetCollections(ctx context.Context, dbName string
 func (this *EvApiAdapter) ShowMongoDbs(ctx context.Context) ([]string, error) {
 	return GetEvApi().ShowMongoDbs(ctx, &dto.ShowMongoDbsReq{EsConnectData: this.buildEsConnectData()})
 }
+
 // DsType 获取数据源类型
 // 返回：
 //   - string: 数据源类型字符串
@@ -503,8 +515,6 @@ func (this *EvApiAdapter) ExecMongoCommand(ctx context.Context, dbName string, c
 		Timeout:       timeout,
 	})
 }
-
-
 
 // EsCatNodes 获取ES节点信息
 // 参数：
