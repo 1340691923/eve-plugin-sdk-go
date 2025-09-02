@@ -15,6 +15,7 @@ const (
 	NoticeBtnJumpTypeReload   NoticeBtnJumpType = "reload"
 )
 
+//primary,success,info,warning,danger 
 const (
 	NoticeLevelPrimary NoticeLevel = "primary"
 	NoticeLevelSuccess NoticeLevel = "success"

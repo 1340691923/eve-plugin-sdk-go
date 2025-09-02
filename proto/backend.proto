@@ -143,6 +143,12 @@ service Live {
   rpc Pub2Channel(Pub2ChannelRequest) returns (Pub2ChannelResponse);
 }
 
+// Task 任务服务
+service Task {
+  // 执行任务
+  rpc TaskExec(TaskRequest) returns (TaskResponse);
+}
+
 // CheckHealthRequest 健康检查请求
 message CheckHealthRequest {
   // 插件上下文
@@ -177,6 +183,32 @@ message Pub2ChannelResponse {
   string message = 2;
   // JSON详情数据
   bytes jsonDetails = 3;
+}
+
+// TaskRequest 任务请求
+message TaskRequest {
+  // JSON请求数据
+  bytes data = 1;
+  // 任务名称
+  string taskName = 2;
+  // 用户ID
+  int32 userId = 3;
+}
+
+// TaskResponse 任务响应
+message TaskResponse {
+  // TaskStatus 任务状态枚举
+  enum TaskStatus {
+    UNKNOWN = 0;  // 未知
+    SUCCESS = 1;  // 成功
+    FAILED = 2;   // 失败
+    RUNNING = 3;  // 执行中
+  }
+
+  // 执行状态
+  TaskStatus status = 1;
+  // 任务输出
+  string message = 2;
 }
 
 // CheckHealthResponse 健康检查响应

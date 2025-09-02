@@ -242,3 +242,40 @@ func (f ConvertFromProtobuf) PluginInfoGetRes(protoResp *pluginv2.PluginInfoGetR
 		PluginVersion: protoResp.PluginVersion,
 	}
 }
+
+// TaskRequest 将Protobuf任务请求转换为SDK格式
+// 参数：
+//   - protoReq: Protobuf任务请求
+//
+// 返回：
+//   - *TaskRequest: SDK任务请求
+func (f ConvertFromProtobuf) TaskRequest(protoReq *pluginv2.TaskRequest) *TaskRequest {
+	return &TaskRequest{
+		JSONData: protoReq.Data,
+		TaskName: protoReq.TaskName,
+		UserID:   int(protoReq.UserId),
+	}
+}
+
+// TaskResponse 将Protobuf任务响应转换为SDK格式
+// 参数：
+//   - protoResp: Protobuf任务响应
+//
+// 返回：
+//   - *TaskResponse: SDK任务响应
+func (f ConvertFromProtobuf) TaskResponse(protoResp *pluginv2.TaskResponse) *TaskResponse {
+	status := TaskStatusUnknown
+	switch protoResp.Status {
+	case pluginv2.TaskResponse_FAILED:
+		status = TaskStatusFailed
+	case pluginv2.TaskResponse_SUCCESS:
+		status = TaskStatusSuccess
+	case pluginv2.TaskResponse_RUNNING:
+		status = TaskStatusRunning
+	}
+
+	return &TaskResponse{
+		Status:  status,
+		Message: protoResp.Message,
+	}
+}

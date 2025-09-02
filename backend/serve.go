@@ -55,6 +55,8 @@ type ServeOpts struct {
 	CallResourceHandler CallResourceHandler
 	// 实时处理器
 	LiveHandler LiveHandler
+	// 任务处理器
+	TaskHandler TaskHandler
 	// GRPC设置
 	GRPCSettings GRPCSettings
 	// 调试模式标志
@@ -119,6 +121,10 @@ func asGRPCServeOpts(opts ServeOpts) grpcplugin.ServeOpts {
 
 	if opts.LiveHandler != nil {
 		pluginOpts.LiveServer = newLiveSDKAdapter(opts.LiveHandler)
+	}
+
+	if opts.TaskHandler != nil {
+		pluginOpts.TaskServer = newTaskSDKAdapter(opts.TaskHandler)
 	}
 
 	if opts.CallResourceHandler != nil {
@@ -192,6 +198,11 @@ func StandaloneServe(dsopts ServeOpts, address string) error {
 	if opts.ResourceServer != nil {
 		pluginv2.RegisterResourceServer(server, opts.ResourceServer)
 		plugKeys = append(plugKeys, "resources")
+	}
+
+	if opts.TaskServer != nil {
+		pluginv2.RegisterTaskServer(server, opts.TaskServer)
+		plugKeys = append(plugKeys, "task")
 	}
 
 	logger.DefaultLogger.Debug("Standalone plugin server", "capabilities", plugKeys)

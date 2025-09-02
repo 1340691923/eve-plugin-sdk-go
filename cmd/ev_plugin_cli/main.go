@@ -6,6 +6,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/1340691923/eve-plugin-sdk-go/backend"
 	"io"
 	"net/http"
 	"os"
@@ -106,6 +107,8 @@ func init() {
 }
 
 func main() {
+	backend.Serve(backend.ServeOpts{})
+
 	if err := rootCmd.Execute(); err != nil {
 		fmt.Fprintf(os.Stderr, "执行命令时出错: %v\n", err)
 		os.Exit(1)

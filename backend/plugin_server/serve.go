@@ -5,14 +5,15 @@ import (
 	"embed"
 	"encoding/json"
 	"flag"
+	"log"
+	"os"
+
 	"github.com/1340691923/eve-plugin-sdk-go/backend"
 	"github.com/1340691923/eve-plugin-sdk-go/backend/web_engine"
 	"github.com/1340691923/eve-plugin-sdk-go/build"
 	"github.com/1340691923/eve-plugin-sdk-go/call_resource"
 	"github.com/1340691923/eve-plugin-sdk-go/check_health"
 	"github.com/1340691923/eve-plugin-sdk-go/enum"
-	"log"
-	"os"
 )
 
 var PluginJson *build.PluginJsonData
@@ -20,7 +21,7 @@ var PluginJson *build.PluginJsonData
 type Assets struct {
 	PluginJsonBytes []byte
 	FrontendFiles   embed.FS
-	Icon embed.FS
+	Icon            embed.FS
 }
 
 type ServeOpts struct {
@@ -29,6 +30,8 @@ type ServeOpts struct {
 	Assets *Assets
 
 	LiveHandler backend.LiveHandler
+
+	TaskHandler backend.TaskHandler
 
 	GRPCSettings backend.GRPCSettings
 
@@ -91,10 +94,11 @@ func Serve(opts ServeOpts) {
 
 	backend.Serve(backend.ServeOpts{
 		PluginJson:          pluginJson,
-		CallResourceHandler: call_resource.NewResourceHandler(webEngine, opts.Assets.FrontendFiles,opts.Assets.Icon),
+		CallResourceHandler: call_resource.NewResourceHandler(webEngine, opts.Assets.FrontendFiles, opts.Assets.Icon),
 		CheckHealthHandler:  check_health.NewCheckHealthSvr(pluginJson, opts.Migration, webEngine),
 		GRPCSettings:        opts.GRPCSettings,
 		LiveHandler:         opts.LiveHandler,
+		TaskHandler:         opts.TaskHandler,
 		EvRpcPort:           evRpcPort,
 		ExitCallback:        opts.ExitCallback,
 		ReadyCallback:       opts.ReadyCallBack,

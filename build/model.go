@@ -20,6 +20,10 @@ type PluginJsonData struct {
 	FrontendDebug bool `json:"frontend_debug"`
 	// 插件别名
 	PluginAlias string `json:"plugin_alias"`
+	//插件描述
+	Description string `json:"description"`
+	//是否支持计划任务
+	SupportTask bool `json:"support_task"`
 	// 前端路由配置
 	FrontendRoutes []*Route `json:"frontend_routes"`
 	// 前端开发服务端口

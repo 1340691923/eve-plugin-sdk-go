@@ -219,3 +219,50 @@ func (t ConvertToProtobuf) PubStatus(status PubStatus) pluginv2.Pub2ChannelRespo
 	}
 	panic("unsupported protobuf pub status type in sdk")
 }
+
+// TaskRequest 将任务请求转换为Protobuf格式
+// 参数：
+//   - req: 任务请求
+//
+// 返回：
+//   - *pluginv2.TaskRequest: Protobuf任务请求
+func (t ConvertToProtobuf) TaskRequest(req *TaskRequest) *pluginv2.TaskRequest {
+	return &pluginv2.TaskRequest{
+		Data:     req.JSONData,
+		TaskName: req.TaskName,
+		UserId:   int32(req.UserID),
+	}
+}
+
+// TaskResponse 将任务响应转换为Protobuf格式
+// 参数：
+//   - res: 任务响应
+//
+// 返回：
+//   - *pluginv2.TaskResponse: Protobuf任务响应
+func (t ConvertToProtobuf) TaskResponse(res *TaskResponse) *pluginv2.TaskResponse {
+	return &pluginv2.TaskResponse{
+		Status:  t.TaskStatus(res.Status),
+		Message: res.Message,
+	}
+}
+
+// TaskStatus 将任务状态转换为Protobuf任务状态
+// 参数：
+//   - status: 任务状态
+//
+// 返回：
+//   - pluginv2.TaskResponse_TaskStatus: Protobuf任务状态
+func (t ConvertToProtobuf) TaskStatus(status TaskStatus) pluginv2.TaskResponse_TaskStatus {
+	switch status {
+	case TaskStatusUnknown:
+		return pluginv2.TaskResponse_UNKNOWN
+	case TaskStatusSuccess:
+		return pluginv2.TaskResponse_SUCCESS
+	case TaskStatusFailed:
+		return pluginv2.TaskResponse_FAILED
+	case TaskStatusRunning:
+		return pluginv2.TaskResponse_RUNNING
+	}
+	panic("unsupported protobuf task status type in sdk")
+}

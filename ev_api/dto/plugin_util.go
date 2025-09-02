@@ -438,3 +438,4 @@ type TasksCancelReq struct {
 	EsConnectData      EsConnectData      `json:"es_connect_data"`
 	TasksCancelReqData TasksCancelReqData `json:"tasks_cancel_req_data"`
 }
+

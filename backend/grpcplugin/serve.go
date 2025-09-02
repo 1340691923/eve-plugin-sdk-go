@@ -19,6 +19,7 @@ type ServeOpts struct {
 	PluginJson     *build.PluginJsonData
 	ResourceServer ResourceServer
 	LiveServer     LiveServer
+	TaskServer     TaskServer
 
 	PluginInfoServer PluginInfoServer
 
@@ -44,6 +45,12 @@ func Serve(opts ServeOpts) {
 	if opts.LiveServer != nil {
 		pSet["live"] = &LiveGRPCPlugin{
 			LiveServer: opts.LiveServer,
+		}
+	}
+
+	if opts.TaskServer != nil {
+		pSet["task"] = &TaskGRPCPlugin{
+			TaskServer: opts.TaskServer,
 		}
 	}
 
